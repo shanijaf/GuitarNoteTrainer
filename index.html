@@ -3,161 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuitarMastery - Step-by-Step</title>
+    <title>GuitarNoteTrainer - The Lessons</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; text-align: center; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
+        :root { --primary: #38bdf8; --bg: #0f172a; --panel: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; text-align: center; padding: 20px; margin: 0; }
+        .container { max-width: 1000px; margin: auto; }
         
-        /* Progress & Mastery UI */
-        .mastery-card { background: #1e293b; padding: 20px; border-radius: 12px; border-bottom: 4px solid #38bdf8; margin-bottom: 20px; text-align: left; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; background: #0f172a; padding: 10px; border-radius: 8px; }
-        .stat-box { text-align: center; }
-        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
-        .stat-val { font-size: 1.2rem; font-weight: bold; color: #38bdf8; }
+        /* Lesson Overlay */
+        #lesson-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; visibility: hidden; }
+        .lesson-content { background: var(--panel); padding: 40px; border-radius: 20px; max-width: 600px; border: 2px solid var(--primary); text-align: left; }
+        .lesson-content h2 { color: var(--primary); margin-top: 0; }
+        .diagram-box { background: #000; padding: 15px; border-radius: 8px; font-family: monospace; color: #00ffcc; margin: 20px 0; line-height: 1.4; }
+
+        /* Mastery Stats */
+        .mastery-ui { background: var(--panel); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-around; align-items: center; }
+        .stat { font-weight: bold; font-size: 1.2rem; }
+        .stat span { display: block; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
 
         /* Fretboard */
-        .fretboard-wrap { overflow-x: auto; background: #27272a; padding: 20px; border-radius: 10px; margin: 20px 0; }
-        .fretboard { display: inline-flex; flex-direction: column; background: #3d2b1f; padding: 10px; border: 2px solid #555; }
-        .string { display: flex; position: relative; height: 40px; }
-        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #888; top: 50%; z-index: 1; }
-        .fret { width: 60px; border-right: 2px solid #666; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; }
-        .nut { border-right: 8px solid #ddd; width: 35px; }
-
-        /* Notes */
-        .note { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
-        .target { background: #38bdf8; color: #0f172a; box-shadow: 0 0 10px #38bdf8; }
+        .fretboard-wrap { overflow-x: auto; padding: 20px 0; }
+        .fretboard { display: inline-flex; flex-direction: column; background: #2d1b0e; padding: 10px; border: 3px solid #444; position: relative; }
+        .string { display: flex; position: relative; height: 42px; border-bottom: 1px solid #444; }
+        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #94a3b8; top: 50%; z-index: 1; }
+        .fret { width: 60px; border-right: 3px solid #bcbcbc; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; position: relative; }
+        .nut { border-right: 10px solid #fff; width: 35px; background: #000; }
+        
+        .fret-num { color: #64748b; font-size: 0.8rem; margin-top: 5px; }
+        .note { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
+        .correct { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
         .wrong { background: #ef4444; color: white; }
 
-        /* Controls */
-        .btn-nav { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-        button { padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-next { background: #10b981; color: white; }
-        .btn-next:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
-        .btn-retry { background: #64748b; color: white; }
+        button { padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: var(--primary); color: #000; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="mastery-card">
-        <h2 id="lesson-title">Lesson 1: The E Anchor</h2>
-        <p id="lesson-text">Find all the E notes. Reach 90% accuracy to unlock the next lesson.</p>
-        
-        <div class="stats-grid">
-            <div class="stat-box"><div class="stat-label">Accuracy</div><div class="stat-val" id="acc-val">0%</div></div>
-            <div class="stat-box"><div class="stat-label">Attempts</div><div class="stat-val" id="att-val">0</div></div>
-            <div class="stat-box"><div class="stat-label">Target</div><div class="stat-val" id="target-note">E</div></div>
+<div id="lesson-overlay">
+    <div class="lesson-content">
+        <h2 id="l-title">Lesson 1: The Octave Jump</h2>
+        <p id="l-text">The most important trick is the <b>Octave Shape</b>. Go down 2 strings and right 2 frets to find the same note!</p>
+        <div class="diagram-box" id="l-diagram">
+            E |---(X)---| (High E)<br>
+            B |---------|<br>
+            G |---------|<br>
+            D |---(X)---| (2 strings down, 2 frets over)<br>
+            A |---------|<br>
+            E |---(R)---| (Start here)
         </div>
+        <button onclick="hideLesson()">I Understand - Start Test</button>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Guitar Note Teacher</h1>
+    <div class="mastery-ui">
+        <div class="stat"><span>Target</span><div id="target-display">E</div></div>
+        <div class="stat"><span>Accuracy</span><div id="acc-display">0%</div></div>
+        <div class="stat"><span>Goal</span><div>90% to Pass</div></div>
+        <button onclick="showLesson()">Review Lesson</button>
     </div>
 
     <div class="fretboard-wrap">
         <div class="fretboard" id="board"></div>
-    </div>
-
-    <div class="btn-nav">
-        <button class="btn-retry" onclick="resetSession()">Restart Lesson</button>
-        <button class="btn-next" id="next-btn" onclick="nextLesson()" disabled>Next Lesson (Locked)</button>
+        <div style="display: flex; margin-left: 45px;" id="fret-nums"></div>
     </div>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const STRINGS = [4, 11, 7, 2, 9, 4];
+    const STRINGS = [4, 11, 7, 2, 9, 4]; // E B G D A E
     
-    const LESSONS = [
-        { note: "E", title: "Lesson 1: The E Anchor", text: "Master the E string roots (Open and 12th fret)." },
-        { note: "A", title: "Lesson 2: The A String", text: "Find the A notes. Remember: 5th string open is A!" },
-        { note: "D", title: "Lesson 3: The D String", text: "Master the D notes in the middle of the neck." },
-        { note: "G", title: "Lesson 4: The G String", text: "Final open string anchor. Find all G notes." }
+    const CURRICULUM = [
+        {
+            note: "E",
+            title: "Lesson 1: The E Mirror",
+            text: "TRICK: The 1st and 6th strings are identical. If you find an E on the bottom, it's in the same spot on the top! Also, everything repeats at Fret 12.",
+            diagram: "E |--(0)--[12]--|<br>B |-------------|<br>G |-------------|<br>D |-------------|<br>A |-------------|<br>E |--(0)--[12]--|"
+        },
+        {
+            note: "A",
+            title: "Lesson 2: The 'L' Shape",
+            text: "TRICK: To find an octave, move down 2 strings and 2 frets to the right. This works for the E, A, and D strings!",
+            diagram: "E |-------------|<br>B |-------------|<br>G |-------(X)---|<br>D |-------------|<br>A |---(R)-------|<br>E |-------------|<br> (R)oot to (X)octave"
+        }
     ];
 
-    let currentIdx = 0;
-    let attempts = 0;
+    let currentLvl = 0;
     let hits = 0;
-    let mastered = false;
+    let attempts = 0;
+
+    function showLesson() { document.getElementById('lesson-overlay').style.visibility = 'visible'; }
+    function hideLesson() { document.getElementById('lesson-overlay').style.visibility = 'hidden'; }
 
     function render() {
-        const lesson = LESSONS[currentIdx];
+        const lesson = CURRICULUM[currentLvl];
+        document.getElementById('l-title').innerText = lesson.title;
+        document.getElementById('l-text').innerText = lesson.text;
+        document.getElementById('l-diagram').innerHTML = lesson.diagram;
+        document.getElementById('target-display').innerText = lesson.note;
+
         const board = document.getElementById('board');
-        board.innerHTML = '';
-        
-        document.getElementById('lesson-title').innerText = lesson.title;
-        document.getElementById('lesson-text').innerText = lesson.text;
-        document.getElementById('target-note').innerText = lesson.note;
-        
+        const nums = document.getElementById('fret-nums');
+        board.innerHTML = ''; nums.innerHTML = '<div style="width:35px"></div>';
+
         STRINGS.forEach((root, sIdx) => {
             const row = document.createElement('div');
             row.className = 'string';
             for (let fIdx = 0; fIdx <= 12; fIdx++) {
                 const fret = document.createElement('div');
                 fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
-                fret.onclick = () => handleFretClick(sIdx, fIdx);
+                fret.onclick = () => handleInput(sIdx, fIdx);
                 row.appendChild(fret);
+                if (sIdx === 0) nums.innerHTML += `<div style="width:60px">${fIdx}</div>`;
             }
             board.appendChild(row);
         });
     }
 
-    function handleFretClick(sIdx, fIdx) {
-        if (mastered) return;
-        
+    function handleInput(sIdx, fIdx) {
         attempts++;
-        const lesson = LESSONS[currentIdx];
-        const clickedNote = NOTES[(STRINGS[sIdx] + fIdx) % 12];
+        const target = CURRICULUM[currentLvl].note;
+        const clicked = NOTES[(STRINGS[sIdx] + fIdx) % 12];
         const fretEl = document.getElementById('board').children[sIdx].children[fIdx];
 
-        if (clickedNote === lesson.note) {
-            if (!fretEl.querySelector('.note')) {
-                hits++;
-                const n = document.createElement('div');
-                n.className = 'note target';
-                n.innerText = clickedNote;
-                fretEl.appendChild(n);
-            }
+        if (clicked === target) {
+            hits++;
+            fretEl.innerHTML = `<div class="note correct">${clicked}</div>`;
         } else {
             const n = document.createElement('div');
             n.className = 'note wrong';
-            n.innerText = clickedNote;
+            n.innerText = clicked;
             fretEl.appendChild(n);
-            setTimeout(() => n.remove(), 800);
+            setTimeout(() => n.remove(), 1000);
         }
-        updateStats();
-    }
 
-    function updateStats() {
-        const accuracy = Math.round((hits / attempts) * 100) || 0;
-        document.getElementById('acc-val').innerText = accuracy + "%";
-        document.getElementById('att-val').innerText = attempts;
+        const acc = Math.round((hits / attempts) * 100);
+        document.getElementById('acc-display').innerText = acc + "%";
 
-        // Unlock logic: Need at least 5 hits AND > 90% accuracy
-        const nextBtn = document.getElementById('next-btn');
-        if (accuracy >= 90 && hits >= 5) {
-            nextBtn.disabled = false;
-            nextBtn.innerText = "Unlock Next Lesson →";
-        } else {
-            nextBtn.disabled = true;
-            nextBtn.innerText = `Need 90% (${accuracy}%)`;
+        if (acc >= 90 && hits >= 5) {
+            alert("Mastered! Moving to next pattern.");
+            currentLvl++;
+            hits = 0; attempts = 0;
+            render();
+            showLesson();
         }
-    }
-
-    function resetSession() {
-        attempts = 0;
-        hits = 0;
-        mastered = false;
-        updateStats();
-        render();
-    }
-
-    function nextLesson() {
-        currentIdx++;
-        if (currentIdx >= LESSONS.length) {
-            alert("Course Complete! You are a Fretboard Master.");
-            currentIdx = 0;
-        }
-        resetSession();
     }
 
     render();
+    showLesson();
 </script>
 </body>
 </html>
