@@ -1,53 +1,119 @@
-import React, { useState } from 'react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuitarNoteTrainer</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: white; text-align: center; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .target-box { background: #333; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #444; }
+        #targetNote { font-size: 3rem; color: #00ffcc; display: block; }
+        .fretboard { display: flex; flex-direction: column; background: #3d2b1f; padding: 10px; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow-x: auto; }
+        .string { display: flex; position: relative; border-bottom: 1px solid #555; }
+        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #aaa; top: 50%; z-index: 1; pointer-events: none; }
+        .fret { width: 60px; height: 40px; border-right: 3px solid #888; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; z-index: 2; transition: 0.2s; }
+        .fret:hover { background: rgba(255,255,255,0.1); }
+        .nut { border-right: 8px solid #ddd; background: #222; width: 40px; }
+        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+        button { padding: 10px 20px; cursor: pointer; background: #00ffcc; border: none; border-radius: 5px; font-weight: bold; color: #1a1a1a; }
+        #message { height: 24px; margin: 10px 0; font-weight: bold; }
+        .stats { margin-top: 10px; color: #888; }
+    </style>
+</head>
+<body>
 
-const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const STANDARD_TUNING = [4, 11, 7, 2, 9, 4]; // E, B, G, D, A, E (High to Low)
-
-const Fretboard = () => {
-  const [capo, setCapo] = useState(0);
-  const [tuning, setTuning] = useState(STANDARD_TUNING);
-  const [lastNote, setLastNote] = useState(null);
-
-  const handleFretClick = (stringIdx, fret) => {
-    const noteIdx = (tuning[stringIdx] + fret + capo) % 12;
-    setLastNote(NOTES[noteIdx]);
-    // Here is where you'd add the "Test Logic":
-    // if (NOTES[noteIdx] === targetNote) { scorePoint() }
-  };
-
-  return (
-    <div className="flex flex-col items-center p-8 bg-gray-900 text-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-4">FretMaster Prototype</h1>
-      <div className="mb-6">
-        <span className="text-xl">Last Note Played: <b className="text-yellow-400">{lastNote || "-"}</b></span>
-      </div>
-
-      {/* The Fretboard Grid */}
-      <div className="relative border-2 border-gray-700 rounded-lg overflow-hidden bg-amber-900 shadow-2xl">
-        {tuning.map((root, sIdx) => (
-          <div key={sIdx} className="flex border-b border-gray-800 last:border-0 relative">
-            {/* String Wire Visual */}
-            <div className="absolute w-full h-[2px] bg-gray-300 top-1/2 shadow-sm z-0"></div>
-            
-            {[...Array(13)].map((_, fIdx) => (
-              <button
-                key={fIdx}
-                onClick={() => handleFretClick(sIdx, fIdx)}
-                className="w-16 h-12 border-r border-gray-500 relative z-10 hover:bg-white/10 transition-colors flex items-center justify-center"
-              >
-                {fIdx === 0 && <div className="absolute inset-0 bg-black/40"></div>}
-                <span className="text-xs opacity-0 hover:opacity-100 bg-black/60 px-1 rounded">
-                  {fIdx}
-                </span>
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
-      
-      <p className="mt-4 text-gray-400 italic">Click any fret to see the note. (Capo: {capo})</p>
+<div class="container">
+    <h1>GuitarNoteTrainer</h1>
+    
+    <div class="target-box">
+        <span>Find this note:</span>
+        <strong id="targetNote">E</strong>
+        <div id="message">Click the correct fret!</div>
     </div>
-  );
-};
 
-export default Fretboard;
+    <div class="fretboard" id="fretboard"></div>
+
+    <div class="controls">
+        <div>Capo: <span id="capoVal">0</span> 
+            <button onclick="changeCapo(1)">+</button>
+            <button onclick="changeCapo(-1)">-</button>
+        </div>
+    </div>
+    
+    <div class="stats">
+        Level: <span id="level">1</span> | Score: <span id="score">0</span>
+    </div>
+</div>
+
+<script>
+    const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const TUNING = [4, 11, 7, 2, 9, 4]; // E, B, G, D, A, E
+    let currentTarget = "E";
+    let score = 0;
+    let level = 1;
+    let capo = 0;
+
+    function initFretboard() {
+        const board = document.getElementById('fretboard');
+        board.innerHTML = '';
+        
+        TUNING.forEach((root, sIdx) => {
+            const stringRow = document.createElement('div');
+            stringRow.className = 'string';
+            
+            for (let fIdx = 0; fIdx <= 12; fIdx++) {
+                const fret = document.createElement('div');
+                fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
+                fret.onclick = () => handleNoteClick(sIdx, fIdx);
+                fret.innerText = fIdx === 0 ? '' : fIdx;
+                stringRow.appendChild(fret);
+            }
+            board.appendChild(stringRow);
+        });
+    }
+
+    function handleNoteClick(sIdx, fIdx) {
+        const noteIdx = (TUNING[sIdx] + fIdx + capo) % 12;
+        const clickedNote = NOTES[noteIdx];
+        const msg = document.getElementById('message');
+
+        if (clickedNote === currentTarget) {
+            score++;
+            msg.innerText = "✅ Correct!";
+            msg.style.color = "#00ffcc";
+            if (score % 5 === 0) levelUp();
+            nextQuestion();
+        } else {
+            msg.innerText = `❌ No, that's ${clickedNote}`;
+            msg.style.color = "#ff4d4d";
+        }
+        updateStats();
+    }
+
+    function nextQuestion() {
+        // Only pick notes based on level (Starting with just E and A)
+        const availableNotes = NOTES.slice(0, level + 3); 
+        currentTarget = availableNotes[Math.floor(Math.random() * availableNotes.length)];
+        document.getElementById('targetNote').innerText = currentTarget;
+    }
+
+    function levelUp() {
+        level++;
+        document.getElementById('message').innerText = "LEVEL UP! New notes added.";
+    }
+
+    function changeCapo(val) {
+        capo = Math.max(0, Math.min(12, capo + val));
+        document.getElementById('capoVal').innerText = capo;
+    }
+
+    function updateStats() {
+        document.getElementById('score').innerText = score;
+        document.getElementById('level').innerText = level;
+    }
+
+    initFretboard();
+</script>
+</body>
+</html>
