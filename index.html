@@ -3,48 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fretboard: Interval Master</title>
+    <title>GuitarMastery - Step-by-Step</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; text-align: center; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; text-align: center; padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
         
-        /* Interval Legend */
-        .legend { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .tag { padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-        .r-tag { background: #ff4757; color: white; } /* Root */
-        .m3-tag { background: #2ed573; color: white; } /* Major 3rd */
-        .p5-tag { background: #1e90ff; color: white; } /* Perfect 5th */
+        /* Progress & Mastery UI */
+        .mastery-card { background: #1e293b; padding: 20px; border-radius: 12px; border-bottom: 4px solid #38bdf8; margin-bottom: 20px; text-align: left; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; background: #0f172a; padding: 10px; border-radius: 8px; }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; color: #38bdf8; }
 
-        .instruction-box { background: #1a1a1a; border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-top: 4px solid #ff4757; text-align: left; }
-        
-        .fretboard-wrap { overflow-x: auto; background: #222; padding: 20px; border-radius: 10px; box-shadow: inset 0 0 20px #000; }
-        .fretboard { display: inline-flex; flex-direction: column; background: #3d2b1f; padding: 10px; border: 2px solid #555; border-radius: 4px; }
-        .string { display: flex; position: relative; height: 45px; }
+        /* Fretboard */
+        .fretboard-wrap { overflow-x: auto; background: #27272a; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .fretboard { display: inline-flex; flex-direction: column; background: #3d2b1f; padding: 10px; border: 2px solid #555; }
+        .string { display: flex; position: relative; height: 40px; }
         .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #888; top: 50%; z-index: 1; }
-        .fret { width: 65px; border-right: 2px solid #666; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; }
-        .nut { border-right: 10px solid #ddd; width: 40px; }
+        .fret { width: 60px; border-right: 2px solid #666; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; }
+        .nut { border-right: 8px solid #ddd; width: 35px; }
 
-        /* Interval Circles */
-        .note { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border: 2px solid rgba(0,0,0,0.2); }
-        .r { background: #ff4757; box-shadow: 0 0 10px #ff4757; }
-        .m3 { background: #2ed573; box-shadow: 0 0 10px #2ed573; }
-        .p5 { background: #1e90ff; box-shadow: 0 0 10px #1e90ff; }
+        /* Notes */
+        .note { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; }
+        .target { background: #38bdf8; color: #0f172a; box-shadow: 0 0 10px #38bdf8; }
+        .wrong { background: #ef4444; color: white; }
 
-        .btn-group { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; background: #444; color: white; }
-        button.active { background: #ff4757; color: white; }
+        /* Controls */
+        .btn-nav { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        button { padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-next { background: #10b981; color: white; }
+        .btn-next:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+        .btn-retry { background: #64748b; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="instruction-box">
-        <h2 id="lesson-title">Interval Mode: The Major Triad</h2>
-        <p id="lesson-text">Instead of note names, we are looking at <b>Intervals</b>. This pattern builds a Major Chord. Move the Root to change the key!</p>
-        <div class="legend">
-            <span class="tag r-tag">1 (Root)</span>
-            <span class="tag m3-tag">3 (Major 3rd)</span>
-            <span class="tag p5-tag">5 (Perfect 5th)</span>
+    <div class="mastery-card">
+        <h2 id="lesson-title">Lesson 1: The E Anchor</h2>
+        <p id="lesson-text">Find all the E notes. Reach 90% accuracy to unlock the next lesson.</p>
+        
+        <div class="stats-grid">
+            <div class="stat-box"><div class="stat-label">Accuracy</div><div class="stat-val" id="acc-val">0%</div></div>
+            <div class="stat-box"><div class="stat-label">Attempts</div><div class="stat-val" id="att-val">0</div></div>
+            <div class="stat-box"><div class="stat-label">Target</div><div class="stat-val" id="target-note">E</div></div>
         </div>
     </div>
 
@@ -52,14 +54,110 @@
         <div class="fretboard" id="board"></div>
     </div>
 
-    <div class="btn-group">
-        <button onclick="changeKey(-1)">Key Down</button>
-        <button class="active" id="key-display">Key: C</button>
-        <button onclick="changeKey(1)">Key Up</button>
+    <div class="btn-nav">
+        <button class="btn-retry" onclick="resetSession()">Restart Lesson</button>
+        <button class="btn-next" id="next-btn" onclick="nextLesson()" disabled>Next Lesson (Locked)</button>
     </div>
-    <p style="color: #888; margin-top: 15px;">Notice how the <b>shape</b> stays the same no matter what key you are in!</p>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const STRINGS = [4, 11, 7, 2, 9, 4]; // E B G D A E
+    const STRINGS = [4, 11, 7, 2, 9, 4];
+    
+    const LESSONS = [
+        { note: "E", title: "Lesson 1: The E Anchor", text: "Master the E string roots (Open and 12th fret)." },
+        { note: "A", title: "Lesson 2: The A String", text: "Find the A notes. Remember: 5th string open is A!" },
+        { note: "D", title: "Lesson 3: The D String", text: "Master the D notes in the middle of the neck." },
+        { note: "G", title: "Lesson 4: The G String", text: "Final open string anchor. Find all G notes." }
+    ];
+
+    let currentIdx = 0;
+    let attempts = 0;
+    let hits = 0;
+    let mastered = false;
+
+    function render() {
+        const lesson = LESSONS[currentIdx];
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        
+        document.getElementById('lesson-title').innerText = lesson.title;
+        document.getElementById('lesson-text').innerText = lesson.text;
+        document.getElementById('target-note').innerText = lesson.note;
+        
+        STRINGS.forEach((root, sIdx) => {
+            const row = document.createElement('div');
+            row.className = 'string';
+            for (let fIdx = 0; fIdx <= 12; fIdx++) {
+                const fret = document.createElement('div');
+                fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
+                fret.onclick = () => handleFretClick(sIdx, fIdx);
+                row.appendChild(fret);
+            }
+            board.appendChild(row);
+        });
+    }
+
+    function handleFretClick(sIdx, fIdx) {
+        if (mastered) return;
+        
+        attempts++;
+        const lesson = LESSONS[currentIdx];
+        const clickedNote = NOTES[(STRINGS[sIdx] + fIdx) % 12];
+        const fretEl = document.getElementById('board').children[sIdx].children[fIdx];
+
+        if (clickedNote === lesson.note) {
+            if (!fretEl.querySelector('.note')) {
+                hits++;
+                const n = document.createElement('div');
+                n.className = 'note target';
+                n.innerText = clickedNote;
+                fretEl.appendChild(n);
+            }
+        } else {
+            const n = document.createElement('div');
+            n.className = 'note wrong';
+            n.innerText = clickedNote;
+            fretEl.appendChild(n);
+            setTimeout(() => n.remove(), 800);
+        }
+        updateStats();
+    }
+
+    function updateStats() {
+        const accuracy = Math.round((hits / attempts) * 100) || 0;
+        document.getElementById('acc-val').innerText = accuracy + "%";
+        document.getElementById('att-val').innerText = attempts;
+
+        // Unlock logic: Need at least 5 hits AND > 90% accuracy
+        const nextBtn = document.getElementById('next-btn');
+        if (accuracy >= 90 && hits >= 5) {
+            nextBtn.disabled = false;
+            nextBtn.innerText = "Unlock Next Lesson →";
+        } else {
+            nextBtn.disabled = true;
+            nextBtn.innerText = `Need 90% (${accuracy}%)`;
+        }
+    }
+
+    function resetSession() {
+        attempts = 0;
+        hits = 0;
+        mastered = false;
+        updateStats();
+        render();
+    }
+
+    function nextLesson() {
+        currentIdx++;
+        if (currentIdx >= LESSONS.length) {
+            alert("Course Complete! You are a Fretboard Master.");
+            currentIdx = 0;
+        }
+        resetSession();
+    }
+
+    render();
+</script>
+</body>
+</html>
