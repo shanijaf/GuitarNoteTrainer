@@ -3,95 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuitarNoteTrainer Pro + Master Map</title>
+    <title>GuitarNoteTrainer - Clean Logic Edition</title>
     <style>
-        :root { 
-            --accent: #00ffcc; 
-            --bg: #0f172a; 
-            --panel: #1e293b; 
-            --fret: #4b5563;
-            --string: #94a3b8;
-        }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 1000px; width: 100%; }
+        :root { --accent: #00ffcc; --bg: #0f172a; --panel: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 1100px; width: 100%; }
         
-        .lesson-header { background: var(--panel); border: 1px solid #334155; border-top: 4px solid var(--accent); padding: 25px; border-radius: 16px; margin-bottom: 30px; position: relative;}
-        .step-indicator { color: var(--accent); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; margin-bottom: 8px; display: block; }
+        /* Fretboard CSS - Procedural rendering */
+        .fretboard-wrap { overflow-x: auto; background: #07090e; padding: 50px 10px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .fretboard { display: inline-flex; flex-direction: column; background: #2a1b0d; border: 4px solid #3d2b1f; position: relative; cursor: crosshair; }
         
-        /* Fretboard */
-        .fretboard-wrap { overflow-x: auto; background: #0a0a0a; padding: 40px 20px; border-radius: 20px; border: 1px solid #333; margin-bottom: 20px; }
-        .fretboard { display: inline-flex; flex-direction: column; background: #241409; padding: 0; border: 4px solid #3d2b1f; position: relative; }
-        
-        .string { display: flex; position: relative; height: 44px; align-items: center; transition: opacity 0.3s; }
-        .string::after { content: ""; position: absolute; width: 100%; background: linear-gradient(to bottom, #94a3b8, #64748b, #94a3b8); z-index: 1; }
-        .string[data-s="0"]::after { height: 1px; }
-        .string[data-s="1"]::after { height: 1.5px; }
-        .string[data-s="2"]::after { height: 2px; }
-        .string[data-s="3"]::after { height: 3px; }
-        .string[data-s="4"]::after { height: 3.5px; }
-        .string[data-s="5"]::after { height: 4.5px; }
+        .string { display: flex; position: relative; height: 42px; align-items: center; }
+        .string::after { content: ""; position: absolute; width: 100%; background: linear-gradient(to bottom, #94a3b8, #64748b, #94a3b8); z-index: 1; pointer-events: none; }
+        /* Procedural String Thickness */
+        .string[data-s="0"]::after { height: 1px; } .string[data-s="1"]::after { height: 1.5px; } .string[data-s="2"]::after { height: 2px; }
+        .string[data-s="3"]::after { height: 3px; } .string[data-s="4"]::after { height: 3.5px; } .string[data-s="5"]::after { height: 4.5px; }
 
-        .fret { width: 70px; height: 100%; border-right: 4px solid #94a3b8; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; position: relative; }
-        .nut { border-right: 12px solid #e2e8f0; width: 40px; background: #111; }
+        .fret { width: 75px; height: 100%; border-right: 4px solid #d1d5db; display: flex; align-items: center; justify-content: center; z-index: 2; position: relative; }
+        .nut { border-right: 12px solid #f8fafc; width: 40px; }
         
-        .fret-marker { position: absolute; width: 12px; height: 12px; background: rgba(255,255,255,0.2); border-radius: 50%; bottom: -30px; left: 50%; transform: translateX(-50%); }
+        /* Fret Markers (Dots) - CSS Only */
+        .dot { position: absolute; width: 14px; height: 14px; background: rgba(255,255,255,0.15); border-radius: 50%; bottom: -35px; pointer-events: none; }
 
-        /* Notes */
-        .note { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; z-index: 10; animation: pop 0.2s; border: 2px solid rgba(255,255,255,0.2); }
-        .highlight { background: var(--accent); color: #0f172a; box-shadow: 0 0 15px var(--accent); border-color: #fff; }
-        .map-mode { background: #334155; color: #fff; opacity: 0.6; }
+        /* Notes & Intervals */
+        .note { width: 34px; height: 34px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; z-index: 10; transition: 0.1s; }
+        .note span { font-size: 0.55rem; opacity: 0.8; } /* For Interval text */
+        
         .correct { background: #fff; color: #000; box-shadow: 0 0 15px #fff; }
-        .wrong { background: #ff4757; color: #fff; }
-        .filtered { background: #facc15; color: #000; box-shadow: 0 0 20px #facc15; transform: scale(1.1); opacity: 1 !important; }
+        .wrong { background: #ff4757; color: #fff; transform: scale(0.8); }
+        .shape-node { background: #facc15; color: #000; box-shadow: 0 0 20px #facc15; border: 2px solid #000; }
+        .ghost { opacity: 0.4; pointer-events: none; background: var(--accent); color: #000; }
 
         /* Controls */
-        .btn-panel { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-        button { padding: 12px 24px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .primary-btn { background: var(--accent); color: #0f172a; }
-        .map-btn { background: #475569; color: white; }
-        .map-btn.active { background: #facc15; color: #000; }
-        .next-btn { background: #8b5cf6; color: #fff; }
-
-        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+        .btn-panel { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; background: var(--panel); padding: 20px; border-radius: 12px; }
+        button, select { padding: 12px 20px; border-radius: 8px; border: 1px solid #334155; font-weight: bold; cursor: pointer; background: #0f172a; color: white; }
+        button:hover { border-color: var(--accent); }
+        .active-btn { background: var(--accent); color: #0f172a; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="lesson-header">
-        <span class="step-indicator" id="step-count">Lesson Mode</span>
-        <h2 id="l-title" style="margin: 0 0 10px 0;">Fretboard Explorer</h2>
-        <div id="msg" style="font-weight: 600; color: var(--accent);">Click "Master Map" to see all notes, or follow the lesson.</div>
+    <div style="text-align: left; margin-bottom: 20px;">
+        <h2 id="l-title" style="margin:0; color: var(--accent);">Fretboard Mastery</h2>
+        <p id="msg" style="margin: 5px 0 0 0; opacity: 0.8;">Choose a module to start practicing.</p>
     </div>
 
     <div class="fretboard-wrap">
-        <div class="fretboard" id="board"></div>
+        <div class="fretboard" id="board" onmouseleave="clearGhost()"></div>
     </div>
 
     <div class="btn-panel">
-        <button id="mapBtn" class="map-btn" onclick="toggleMasterMap()">Toggle Master Map</button>
-        <span style="border-left: 2px solid #334155; margin: 0 10px;"></span>
-        <button id="showBtn" class="primary-btn" onclick="showPattern()">1. Show Lesson Pattern</button>
-        <button id="testBtn" class="primary-btn" style="display:none; background: #fff;" onclick="startTest()">2. Test Me</button>
-        <button id="nextBtn" class="next-btn" style="display:none;" onclick="nextStep()">Next Lesson →</button>
+        <select id="shapeSelect" onchange="setMode('shape', this.value)">
+            <option value="">-- Movable Shapes --</option>
+            <option value="majorTriad">Major Triad (R-3-5)</option>
+            <option value="minorTriad">Minor Triad (R-b3-5)</option>
+            <option value="power">Power Chord (R-5-8)</option>
+            <option value="dom7">Dominant 7th (R-3-5-b7)</option>
+        </select>
+        <button id="lessonBtn" onclick="setMode('lesson')">Note Trainer</button>
+        <button id="mapBtn" onclick="setMode('map')">Full Map</button>
     </div>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const STRINGS = [4, 11, 7, 2, 9, 4]; 
-    const MARKERS = [3, 5, 7, 9, 12];
+    const STRINGS = [4, 11, 7, 2, 9, 4]; // E B G D A E
     
-    let currentStep = 0;
-    let score = 0;
-    let isMapMode = false;
-    let activeFilter = null;
+    // Shapes defined by {stringOffset, fretOffset, intervalName}
+    const SHAPES = {
+        majorTriad: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -1, i: '3'}, {s: 2, f: -2, i: '5'} ],
+        minorTriad: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -2, i: 'b3'}, {s: 2, f: -2, i: '5'} ],
+        power: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: 2, i: '5'}, {s: 2, f: 2, i: '8'} ],
+        dom7: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -1, i: '3'}, {s: 2, f: -2, i: 'b7'}, {s: 3, f: -2, i: '5'} ]
+    };
 
-    const STEPS = [
-        { title: "The Mirror Strings (6 & 1)", strings: [0, 5], note: "E", req: 4 },
-        { title: "The Octave Jump (4 & 2)", strings: [1, 3], note: "E", req: 2 },
-        { title: "The Power Pair (5 & 3)", strings: [2, 4], note: "E", req: 2 }
-    ];
+    let currentMode = 'lesson';
+    let targetNote = "C";
+    let activeShape = null;
 
     function initBoard() {
         const board = document.getElementById('board');
@@ -104,10 +93,13 @@
                 const fret = document.createElement('div');
                 fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
                 fret.dataset.note = NOTES[(root + fIdx) % 12];
-                fret.onclick = () => handleFretClick(sIdx, fIdx, fret);
-                if (sIdx === 5 && MARKERS.includes(fIdx)) {
+                fret.onmouseenter = () => handleHover(sIdx, fIdx);
+                fret.onclick = () => handleClick(sIdx, fIdx, fret);
+                
+                // Add Dots (3, 5, 7, 9, 12)
+                if (sIdx === 5 && [3,5,7,9,12].includes(fIdx)) {
                     const dot = document.createElement('div');
-                    dot.className = 'fret-marker';
+                    dot.className = 'dot';
                     fret.appendChild(dot);
                 }
                 row.appendChild(fret);
@@ -116,114 +108,67 @@
         });
     }
 
-    function toggleMasterMap() {
-        isMapMode = !isMapMode;
-        activeFilter = null;
-        const btn = document.getElementById('mapBtn');
-        btn.classList.toggle('active');
-        btn.innerText = isMapMode ? "Exit Master Map" : "Toggle Master Map";
+    function setMode(mode, val) {
+        currentMode = mode;
+        activeShape = (mode === 'shape') ? SHAPES[val] : null;
+        document.querySelectorAll('.note').forEach(n => n.remove());
         
-        if (isMapMode) {
-            document.getElementById('msg').innerText = "Click any note to filter the whole neck!";
-            renderMasterMap();
+        if (mode === 'lesson') {
+            targetNote = NOTES[Math.floor(Math.random() * NOTES.length)];
+            document.getElementById('msg').innerText = `Find all ${targetNote} notes on the neck.`;
+        } else if (mode === 'shape') {
+            document.getElementById('msg').innerText = "Hover to see the shape, click to lock it.";
         } else {
-            document.getElementById('msg').innerText = "Lesson mode resumed.";
-            refreshLessonUI();
+            document.getElementById('msg').innerText = "Click a note to highlight all occurrences.";
         }
     }
 
-    function renderMasterMap() {
-        const frets = document.querySelectorAll('.fret');
-        const rows = document.querySelectorAll('.string');
-        rows.forEach(r => { r.style.opacity = "1"; r.style.pointerEvents = "auto"; });
+    function handleHover(sIdx, fIdx) {
+        if (currentMode !== 'shape' || !activeShape) return;
+        clearGhost();
+        drawShape(sIdx, fIdx, 'ghost');
+    }
 
-        frets.forEach(fret => {
-            const noteName = fret.dataset.note;
-            const isFiltered = activeFilter === noteName;
-            
-            fret.innerHTML = `<div class="note ${isMapMode ? 'map-mode' : ''} ${isFiltered ? 'filtered' : ''}">${noteName}</div>`;
-            if (fret.parentNode.dataset.s == 5 && MARKERS.includes(Array.from(fret.parentNode.children).indexOf(fret))) {
-                const dot = document.createElement('div');
-                dot.className = 'fret-marker';
-                fret.appendChild(dot);
+    function handleClick(sIdx, fIdx, fretEl) {
+        const note = fretEl.dataset.note;
+
+        if (currentMode === 'shape' && activeShape) {
+            document.querySelectorAll('.note:not(.ghost)').forEach(n => n.remove());
+            drawShape(sIdx, fIdx, 'shape-node');
+        } else if (currentMode === 'lesson') {
+            if (note === targetNote) {
+                fretEl.innerHTML = `<div class="note correct">${note}</div>`;
+            } else {
+                const err = document.createElement('div');
+                err.className = 'note wrong';
+                err.innerText = note;
+                fretEl.appendChild(err);
+                setTimeout(() => err.remove(), 600);
+            }
+        }
+    }
+
+    function drawShape(anchorS, anchorF, className) {
+        activeShape.forEach(off => {
+            const ts = anchorS - off.s; // Offset 'up' the strings
+            const tf = anchorF + off.f;
+            if (ts >= 0 && ts < 6 && tf >= 0 && tf <= 12) {
+                const targetFret = document.querySelector(`.string[data-s="${ts}"]`).children[tf];
+                const noteName = targetFret.dataset.note;
+                const node = document.createElement('div');
+                node.className = `note ${className}`;
+                node.innerHTML = `${noteName}<span>${off.i}</span>`;
+                targetFret.appendChild(node);
             }
         });
     }
 
-    function handleFretClick(sIdx, fIdx, fretEl) {
-        const clickedNote = fretEl.dataset.note;
-
-        if (isMapMode) {
-            // Filter logic
-            activeFilter = (activeFilter === clickedNote) ? null : clickedNote;
-            renderMasterMap();
-            return;
-        }
-
-        // Lesson logic
-        const step = STEPS[currentStep];
-        if (clickedNote === step.note) {
-            if (!fretEl.querySelector('.note.correct')) {
-                score++;
-                fretEl.innerHTML += `<div class="note correct">${clickedNote}</div>`;
-                if (score >= step.req) {
-                    document.getElementById('msg').innerText = "Mastery Confirmed!";
-                    document.getElementById('nextBtn').style.display = 'block';
-                }
-            }
-        } else {
-            const fail = document.createElement('div');
-            fail.className = 'note wrong';
-            fail.innerText = clickedNote;
-            fretEl.appendChild(fail);
-            setTimeout(() => fail.remove(), 600);
-        }
-    }
-
-    function showPattern() {
-        if(isMapMode) toggleMasterMap();
-        const step = STEPS[currentStep];
-        const rows = document.querySelectorAll('.string');
-        rows.forEach((row, sIdx) => {
-            const isTarget = step.strings.includes(sIdx);
-            row.style.opacity = isTarget ? "1" : "0.15";
-            if (isTarget) {
-                row.querySelectorAll('.fret').forEach(f => {
-                    if (f.dataset.note === step.note) f.innerHTML += `<div class="note highlight">${step.note}</div>`;
-                });
-            }
-        });
-        document.getElementById('showBtn').style.display = 'none';
-        document.getElementById('testBtn').style.display = 'block';
-    }
-
-    function startTest() {
-        score = 0;
-        refreshLessonUI();
-        document.getElementById('testBtn').style.display = 'none';
-        document.getElementById('msg').innerText = `Find all ${STEPS[currentStep].req} positions!`;
-    }
-
-    function refreshLessonUI() {
-        const step = STEPS[currentStep];
-        const rows = document.querySelectorAll('.string');
-        rows.forEach((row, sIdx) => {
-            row.style.opacity = step.strings.includes(sIdx) ? "1" : "0.15";
-            row.querySelectorAll('.note').forEach(n => n.remove());
-        });
-    }
-
-    function nextStep() {
-        currentStep = (currentStep + 1) % STEPS.length;
-        document.getElementById('step-count').innerText = `Step ${currentStep + 1} of 3`;
-        document.getElementById('l-title').innerText = STEPS[currentStep].title;
-        document.getElementById('nextBtn').style.display = 'none';
-        document.getElementById('showBtn').style.display = 'block';
-        refreshLessonUI();
+    function clearGhost() {
+        document.querySelectorAll('.ghost').forEach(g => g.remove());
     }
 
     initBoard();
-    refreshLessonUI();
+    setMode('lesson');
 </script>
 </body>
 </html>
