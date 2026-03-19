@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuitarNoteTrainer Pro</title>
+    <title>GuitarNoteTrainer Pro + Master Map</title>
     <style>
         :root { 
             --accent: #00ffcc; 
@@ -15,18 +15,15 @@
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 1000px; width: 100%; }
         
-        /* Header Polish */
-        .lesson-header { background: var(--panel); border: 1px solid #334155; border-top: 4px solid var(--accent); padding: 25px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .lesson-header { background: var(--panel); border: 1px solid #334155; border-top: 4px solid var(--accent); padding: 25px; border-radius: 16px; margin-bottom: 30px; position: relative;}
         .step-indicator { color: var(--accent); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; margin-bottom: 8px; display: block; }
-        .tip-text { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid var(--accent); line-height: 1.6; }
-
-        /* Fretboard Realism */
-        .fretboard-wrap { overflow-x: auto; background: #0a0a0a; padding: 40px 20px; border-radius: 20px; border: 1px solid #333; position: relative; }
-        .fretboard { display: inline-flex; flex-direction: column; background: #241409; padding: 0; border: 4px solid #3d2b1f; position: relative; box-shadow: inset 0 0 50px #000; }
         
-        .string { display: flex; position: relative; height: 44px; align-items: center; }
-        /* Dynamic String Gauges */
-        .string::after { content: ""; position: absolute; width: 100%; background: linear-gradient(to bottom, #94a3b8, #64748b, #94a3b8); z-index: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        /* Fretboard */
+        .fretboard-wrap { overflow-x: auto; background: #0a0a0a; padding: 40px 20px; border-radius: 20px; border: 1px solid #333; margin-bottom: 20px; }
+        .fretboard { display: inline-flex; flex-direction: column; background: #241409; padding: 0; border: 4px solid #3d2b1f; position: relative; }
+        
+        .string { display: flex; position: relative; height: 44px; align-items: center; transition: opacity 0.3s; }
+        .string::after { content: ""; position: absolute; width: 100%; background: linear-gradient(to bottom, #94a3b8, #64748b, #94a3b8); z-index: 1; }
         .string[data-s="0"]::after { height: 1px; }
         .string[data-s="1"]::after { height: 1.5px; }
         .string[data-s="2"]::after { height: 2px; }
@@ -35,38 +32,36 @@
         .string[data-s="5"]::after { height: 4.5px; }
 
         .fret { width: 70px; height: 100%; border-right: 4px solid #94a3b8; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; position: relative; }
-        .fret:hover { background: rgba(255,255,255,0.05); }
         .nut { border-right: 12px solid #e2e8f0; width: 40px; background: #111; }
         
-        /* Fret Markers (Dots) */
         .fret-marker { position: absolute; width: 12px; height: 12px; background: rgba(255,255,255,0.2); border-radius: 50%; bottom: -30px; left: 50%; transform: translateX(-50%); }
 
-        /* Notes & Feedback */
-        .note { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; z-index: 10; animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .highlight { background: var(--accent); color: #0f172a; box-shadow: 0 0 20px var(--accent); }
+        /* Notes */
+        .note { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; z-index: 10; animation: pop 0.2s; border: 2px solid rgba(255,255,255,0.2); }
+        .highlight { background: var(--accent); color: #0f172a; box-shadow: 0 0 15px var(--accent); border-color: #fff; }
+        .map-mode { background: #334155; color: #fff; opacity: 0.6; }
         .correct { background: #fff; color: #000; box-shadow: 0 0 15px #fff; }
-        .wrong { background: #ff4757; color: #fff; transform: scale(0.8); }
+        .wrong { background: #ff4757; color: #fff; }
+        .filtered { background: #facc15; color: #000; box-shadow: 0 0 20px #facc15; transform: scale(1.1); opacity: 1 !important; }
 
         /* Controls */
-        .btn-panel { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
-        button { padding: 12px 28px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+        .btn-panel { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        button { padding: 12px 24px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
         .primary-btn { background: var(--accent); color: #0f172a; }
-        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 255, 204, 0.3); }
-        .test-btn { background: #f8fafc; color: #0f172a; }
-        .next-btn { background: #8b5cf6; color: #fff; animation: pulseGlow 2s infinite; }
+        .map-btn { background: #475569; color: white; }
+        .map-btn.active { background: #facc15; color: #000; }
+        .next-btn { background: #8b5cf6; color: #fff; }
 
-        @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 5px #8b5cf6; } 50% { box-shadow: 0 0 20px #8b5cf6; } }
+        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="lesson-header">
-        <span class="step-indicator" id="step-count">Step 1 of 3</span>
-        <h2 id="l-title" style="margin: 0 0 10px 0;">Mirror Strings</h2>
-        <div class="tip-text" id="l-text">Standard tuning mirrors the E on the top and bottom strings.</div>
-        <div id="msg" style="font-weight: 600; color: var(--accent); height: 20px;">Ready to practice?</div>
+        <span class="step-indicator" id="step-count">Lesson Mode</span>
+        <h2 id="l-title" style="margin: 0 0 10px 0;">Fretboard Explorer</h2>
+        <div id="msg" style="font-weight: 600; color: var(--accent);">Click "Master Map" to see all notes, or follow the lesson.</div>
     </div>
 
     <div class="fretboard-wrap">
@@ -74,124 +69,109 @@
     </div>
 
     <div class="btn-panel">
-        <button id="showBtn" class="primary-btn" onclick="showPattern()">1. Show Pattern</button>
-        <button id="testBtn" class="test-btn" style="display:none;" onclick="startTest()">2. Test Me</button>
-        <button id="nextBtn" class="next-btn" style="display:none;" onclick="nextStep()">3. Mastery Achieved →</button>
+        <button id="mapBtn" class="map-btn" onclick="toggleMasterMap()">Toggle Master Map</button>
+        <span style="border-left: 2px solid #334155; margin: 0 10px;"></span>
+        <button id="showBtn" class="primary-btn" onclick="showPattern()">1. Show Lesson Pattern</button>
+        <button id="testBtn" class="primary-btn" style="display:none; background: #fff;" onclick="startTest()">2. Test Me</button>
+        <button id="nextBtn" class="next-btn" style="display:none;" onclick="nextStep()">Next Lesson →</button>
     </div>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const STRINGS = [4, 11, 7, 2, 9, 4]; // E B G D A E
+    const STRINGS = [4, 11, 7, 2, 9, 4]; 
     const MARKERS = [3, 5, 7, 9, 12];
     
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    const STEPS = [
-        { title: "The Mirror Strings (6 & 1)", text: "Strings 1 and 6 are identical. Find all 'E' notes on both.", strings: [0, 5], note: "E", req: 4 },
-        { title: "The Octave Jump (4 & 2)", text: "On the D and B strings, the E notes are always 3 frets apart.", strings: [1, 3], note: "E", req: 2 },
-        { title: "The Power Pair (5 & 3)", text: "On the A and G strings, the E notes are 2 frets apart.", strings: [2, 4], note: "E", req: 2 }
-    ];
-
     let currentStep = 0;
     let score = 0;
+    let isMapMode = false;
+    let activeFilter = null;
 
-    function playNote(freq, type = 'triangle', decay = 1) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + decay);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + decay);
-    }
+    const STEPS = [
+        { title: "The Mirror Strings (6 & 1)", strings: [0, 5], note: "E", req: 4 },
+        { title: "The Octave Jump (4 & 2)", strings: [1, 3], note: "E", req: 2 },
+        { title: "The Power Pair (5 & 3)", strings: [2, 4], note: "E", req: 2 }
+    ];
 
     function initBoard() {
         const board = document.getElementById('board');
         board.innerHTML = '';
-        
         STRINGS.forEach((root, sIdx) => {
             const row = document.createElement('div');
             row.className = 'string';
             row.dataset.s = sIdx;
-            
             for (let fIdx = 0; fIdx <= 12; fIdx++) {
                 const fret = document.createElement('div');
                 fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
+                fret.dataset.note = NOTES[(root + fIdx) % 12];
                 fret.onclick = () => handleFretClick(sIdx, fIdx, fret);
-                
-                // Add Fret Markers (Dots) on the bottom string only for visual guide
                 if (sIdx === 5 && MARKERS.includes(fIdx)) {
                     const dot = document.createElement('div');
                     dot.className = 'fret-marker';
                     fret.appendChild(dot);
                 }
-                
                 row.appendChild(fret);
             }
             board.appendChild(row);
         });
     }
 
-    function renderState(showHighlights = false) {
-        const step = STEPS[currentStep];
-        const rows = document.querySelectorAll('.string');
+    function toggleMasterMap() {
+        isMapMode = !isMapMode;
+        activeFilter = null;
+        const btn = document.getElementById('mapBtn');
+        btn.classList.toggle('active');
+        btn.innerText = isMapMode ? "Exit Master Map" : "Toggle Master Map";
         
-        rows.forEach((row, sIdx) => {
-            const isTargetString = step.strings.includes(sIdx);
-            row.style.opacity = isTargetString ? "1" : "0.15";
-            row.style.pointerEvents = isTargetString ? "auto" : "none";
-            
-            const frets = row.querySelectorAll('.fret');
-            frets.forEach((fret, fIdx) => {
-                const noteName = NOTES[(STRINGS[sIdx] + fIdx) % 12];
-                // Clear previous notes
-                const existingNote = fret.querySelector('.note');
-                if (existingNote) existingNote.remove();
+        if (isMapMode) {
+            document.getElementById('msg').innerText = "Click any note to filter the whole neck!";
+            renderMasterMap();
+        } else {
+            document.getElementById('msg').innerText = "Lesson mode resumed.";
+            refreshLessonUI();
+        }
+    }
 
-                if (showHighlights && isTargetString && noteName === step.note) {
-                    fret.innerHTML += `<div class="note highlight">${noteName}</div>`;
-                }
-            });
+    function renderMasterMap() {
+        const frets = document.querySelectorAll('.fret');
+        const rows = document.querySelectorAll('.string');
+        rows.forEach(r => { r.style.opacity = "1"; r.style.pointerEvents = "auto"; });
+
+        frets.forEach(fret => {
+            const noteName = fret.dataset.note;
+            const isFiltered = activeFilter === noteName;
+            
+            fret.innerHTML = `<div class="note ${isMapMode ? 'map-mode' : ''} ${isFiltered ? 'filtered' : ''}">${noteName}</div>`;
+            if (fret.parentNode.dataset.s == 5 && MARKERS.includes(Array.from(fret.parentNode.children).indexOf(fret))) {
+                const dot = document.createElement('div');
+                dot.className = 'fret-marker';
+                fret.appendChild(dot);
+            }
         });
     }
 
-    function showPattern() {
-        renderState(true);
-        document.getElementById('showBtn').style.display = 'none';
-        document.getElementById('testBtn').style.display = 'block';
-        document.getElementById('msg').innerText = "Memorize the positions...";
-    }
-
-    function startTest() {
-        score = 0;
-        renderState(false);
-        document.getElementById('testBtn').style.display = 'none';
-        document.getElementById('msg').innerText = `Find all ${STEPS[currentStep].req} positions!`;
-    }
-
     function handleFretClick(sIdx, fIdx, fretEl) {
+        const clickedNote = fretEl.dataset.note;
+
+        if (isMapMode) {
+            // Filter logic
+            activeFilter = (activeFilter === clickedNote) ? null : clickedNote;
+            renderMasterMap();
+            return;
+        }
+
+        // Lesson logic
         const step = STEPS[currentStep];
-        const clickedNote = NOTES[(STRINGS[sIdx] + fIdx) % 12];
-        
         if (clickedNote === step.note) {
-            if (!fretEl.querySelector('.note')) {
+            if (!fretEl.querySelector('.note.correct')) {
                 score++;
-                playNote(200 + (score * 50), 'sine', 0.5);
                 fretEl.innerHTML += `<div class="note correct">${clickedNote}</div>`;
-                
                 if (score >= step.req) {
                     document.getElementById('msg').innerText = "Mastery Confirmed!";
                     document.getElementById('nextBtn').style.display = 'block';
-                    playNote(440, 'triangle', 1); // Success chime
                 }
             }
         } else {
-            playNote(100, 'sawtooth', 0.2); // Error buzz
             const fail = document.createElement('div');
             fail.className = 'note wrong';
             fail.innerText = clickedNote;
@@ -200,25 +180,50 @@
         }
     }
 
+    function showPattern() {
+        if(isMapMode) toggleMasterMap();
+        const step = STEPS[currentStep];
+        const rows = document.querySelectorAll('.string');
+        rows.forEach((row, sIdx) => {
+            const isTarget = step.strings.includes(sIdx);
+            row.style.opacity = isTarget ? "1" : "0.15";
+            if (isTarget) {
+                row.querySelectorAll('.fret').forEach(f => {
+                    if (f.dataset.note === step.note) f.innerHTML += `<div class="note highlight">${step.note}</div>`;
+                });
+            }
+        });
+        document.getElementById('showBtn').style.display = 'none';
+        document.getElementById('testBtn').style.display = 'block';
+    }
+
+    function startTest() {
+        score = 0;
+        refreshLessonUI();
+        document.getElementById('testBtn').style.display = 'none';
+        document.getElementById('msg').innerText = `Find all ${STEPS[currentStep].req} positions!`;
+    }
+
+    function refreshLessonUI() {
+        const step = STEPS[currentStep];
+        const rows = document.querySelectorAll('.string');
+        rows.forEach((row, sIdx) => {
+            row.style.opacity = step.strings.includes(sIdx) ? "1" : "0.15";
+            row.querySelectorAll('.note').forEach(n => n.remove());
+        });
+    }
+
     function nextStep() {
-        currentStep++;
-        if (currentStep >= STEPS.length) {
-            alert("🎸 Fretboard Master! You've completed all levels.");
-            currentStep = 0;
-        }
-        
-        const S = STEPS[currentStep];
+        currentStep = (currentStep + 1) % STEPS.length;
         document.getElementById('step-count').innerText = `Step ${currentStep + 1} of 3`;
-        document.getElementById('l-title').innerText = S.title;
-        document.getElementById('l-text').innerText = S.text;
+        document.getElementById('l-title').innerText = STEPS[currentStep].title;
         document.getElementById('nextBtn').style.display = 'none';
         document.getElementById('showBtn').style.display = 'block';
-        document.getElementById('msg').innerText = "Ready for the next one?";
-        renderState(false);
+        refreshLessonUI();
     }
 
     initBoard();
-    renderState(false);
+    refreshLessonUI();
 </script>
 </body>
 </html>
