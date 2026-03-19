@@ -3,46 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuitarNoteTrainer</title>
+    <title>GuitarNoteTrainer - Teacher Edition</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: white; text-align: center; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
         .container { max-width: 900px; margin: auto; }
-        .target-box { background: #333; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #444; }
-        #targetNote { font-size: 3rem; color: #00ffcc; display: block; }
-        .fretboard { display: flex; flex-direction: column; background: #3d2b1f; padding: 10px; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow-x: auto; }
-        .string { display: flex; position: relative; border-bottom: 1px solid #555; }
-        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #aaa; top: 50%; z-index: 1; pointer-events: none; }
-        .fret { width: 60px; height: 40px; border-right: 3px solid #888; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; z-index: 2; transition: 0.2s; }
-        .fret:hover { background: rgba(255,255,255,0.1); }
+        .lesson-box { background: #2d3436; padding: 20px; border-radius: 10px; border-left: 5px solid #00ffcc; margin-bottom: 20px; text-align: left; }
+        .target-box { background: #333; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #444; }
+        #targetNote { font-size: 2.5rem; color: #00ffcc; }
+        .fretboard { display: flex; flex-direction: column; background: #3d2b1f; padding: 10px; border-radius: 5px; overflow-x: auto; position: relative; }
+        .string { display: flex; position: relative; border-bottom: 1px solid #555; height: 40px; }
+        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #aaa; top: 50%; z-index: 1; }
+        .fret { width: 60px; border-right: 3px solid #888; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; position: relative; }
         .nut { border-right: 8px solid #ddd; background: #222; width: 40px; }
-        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
-        button { padding: 10px 20px; cursor: pointer; background: #00ffcc; border: none; border-radius: 5px; font-weight: bold; color: #1a1a1a; }
-        #message { height: 24px; margin: 10px 0; font-weight: bold; }
-        .stats { margin-top: 10px; color: #888; }
+        .note-hint { width: 25px; height: 25px; background: #00ffcc; color: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; box-shadow: 0 0 10px #00ffcc; }
+        .controls { margin-top: 20px; }
+        button { padding: 12px 24px; cursor: pointer; background: #00ffcc; border: none; border-radius: 5px; font-weight: bold; margin: 5px; }
+        button.secondary { background: #636e72; color: white; }
+        #message { font-weight: bold; margin: 10px; min-height: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>GuitarNoteTrainer</h1>
+    <h1>Guitar Note Teacher</h1>
+
+    <div class="lesson-box" id="lessonBox">
+        <h3 id="lessonTitle">Lesson 1: The Note E</h3>
+        <p id="lessonText">The guitar has two 'E' strings (the thickest and thinnest). Start by finding the Open strings and the 12th fret.</p>
+    </div>
     
     <div class="target-box">
-        <span>Find this note:</span>
-        <strong id="targetNote">E</strong>
-        <div id="message">Click the correct fret!</div>
+        <div>Find the note: <strong id="targetNote">E</strong></div>
+        <div id="message">Watch the highlights, then try to click them!</div>
     </div>
 
     <div class="fretboard" id="fretboard"></div>
 
     <div class="controls">
-        <div>Capo: <span id="capoVal">0</span> 
-            <button onclick="changeCapo(1)">+</button>
-            <button onclick="changeCapo(-1)">-</button>
-        </div>
-    </div>
-    
-    <div class="stats">
-        Level: <span id="level">1</span> | Score: <span id="score">0</span>
+        <button onclick="toggleHints()" id="hintBtn">Show All Locations</button>
+        <button class="secondary" onclick="nextLevel()">Skip to Next Note</button>
     </div>
 </div>
 
@@ -50,23 +49,35 @@
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     const TUNING = [4, 11, 7, 2, 9, 4]; // E, B, G, D, A, E
     let currentTarget = "E";
-    let score = 0;
-    let level = 1;
-    let capo = 0;
+    let showHints = true;
+    let level = 0; // Index of NOTES we are learning
+
+    const lessons = [
+        "The 'E' note is your anchor. It's the open 1st and 6th strings. It repeats at the 12th fret.",
+        "The 'A' note is the open 5th string. Notice how it's always 2 frets higher when you move down a string (except the B string!)",
+        "Now let's find 'D'. It's the open 4th string. Look for the triangle patterns!",
+        "Next is 'G'. Open 3rd string. All notes repeat every 12 frets."
+    ];
 
     function initFretboard() {
         const board = document.getElementById('fretboard');
         board.innerHTML = '';
-        
         TUNING.forEach((root, sIdx) => {
             const stringRow = document.createElement('div');
             stringRow.className = 'string';
-            
             for (let fIdx = 0; fIdx <= 12; fIdx++) {
                 const fret = document.createElement('div');
                 fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
                 fret.onclick = () => handleNoteClick(sIdx, fIdx);
-                fret.innerText = fIdx === 0 ? '' : fIdx;
+                
+                // Add visual hint if enabled
+                const noteIdx = (TUNING[sIdx] + fIdx) % 12;
+                if (showHints && NOTES[noteIdx] === currentTarget) {
+                    const hint = document.createElement('div');
+                    hint.className = 'note-hint';
+                    hint.innerText = NOTES[noteIdx];
+                    fret.appendChild(hint);
+                }
                 stringRow.appendChild(fret);
             }
             board.appendChild(stringRow);
@@ -74,43 +85,42 @@
     }
 
     function handleNoteClick(sIdx, fIdx) {
-        const noteIdx = (TUNING[sIdx] + fIdx + capo) % 12;
+        const noteIdx = (TUNING[sIdx] + fIdx) % 12;
         const clickedNote = NOTES[noteIdx];
         const msg = document.getElementById('message');
 
         if (clickedNote === currentTarget) {
-            score++;
-            msg.innerText = "✅ Correct!";
+            msg.innerText = "✅ You found it! That's a " + currentTarget;
             msg.style.color = "#00ffcc";
-            if (score % 5 === 0) levelUp();
-            nextQuestion();
+            // If they find one while hints are off, they are learning!
+            if (!showHints) {
+                setTimeout(nextLevel, 1500);
+            }
         } else {
-            msg.innerText = `❌ No, that's ${clickedNote}`;
+            msg.innerText = `❌ That's ${clickedNote}. Look for the highlighted circles.`;
             msg.style.color = "#ff4d4d";
         }
-        updateStats();
     }
 
-    function nextQuestion() {
-        // Only pick notes based on level (Starting with just E and A)
-        const availableNotes = NOTES.slice(0, level + 3); 
-        currentTarget = availableNotes[Math.floor(Math.random() * availableNotes.length)];
+    function toggleHints() {
+        showHints = !showHints;
+        document.getElementById('hintBtn').innerText = showHints ? "Hide Hints (Test Me)" : "Show Hints (Teach Me)";
+        initFretboard();
+    }
+
+    function nextLevel() {
+        level = (level + 1) % lessons.length;
+        // Basic progression: E -> A -> D -> G (The open strings)
+        const progression = ["E", "A", "D", "G"]; 
+        currentTarget = progression[level];
+        
         document.getElementById('targetNote').innerText = currentTarget;
-    }
-
-    function levelUp() {
-        level++;
-        document.getElementById('message').innerText = "LEVEL UP! New notes added.";
-    }
-
-    function changeCapo(val) {
-        capo = Math.max(0, Math.min(12, capo + val));
-        document.getElementById('capoVal').innerText = capo;
-    }
-
-    function updateStats() {
-        document.getElementById('score').innerText = score;
-        document.getElementById('level').innerText = level;
+        document.getElementById('lessonTitle').innerText = `Lesson: The Note ${currentTarget}`;
+        document.getElementById('lessonText').innerText = lessons[level];
+        
+        showHints = true; // Always show hints when a new note starts
+        document.getElementById('hintBtn').innerText = "Hide Hints (Test Me)";
+        initFretboard();
     }
 
     initFretboard();
