@@ -3,127 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuitarNoteTrainer - Teacher Edition</title>
+    <title>Fretboard: Interval Master</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; text-align: center; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        .lesson-box { background: #2d3436; padding: 20px; border-radius: 10px; border-left: 5px solid #00ffcc; margin-bottom: 20px; text-align: left; }
-        .target-box { background: #333; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #444; }
-        #targetNote { font-size: 2.5rem; color: #00ffcc; }
-        .fretboard { display: flex; flex-direction: column; background: #3d2b1f; padding: 10px; border-radius: 5px; overflow-x: auto; position: relative; }
-        .string { display: flex; position: relative; border-bottom: 1px solid #555; height: 40px; }
-        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #aaa; top: 50%; z-index: 1; }
-        .fret { width: 60px; border-right: 3px solid #888; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; position: relative; }
-        .nut { border-right: 8px solid #ddd; background: #222; width: 40px; }
-        .note-hint { width: 25px; height: 25px; background: #00ffcc; color: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; box-shadow: 0 0 10px #00ffcc; }
-        .controls { margin-top: 20px; }
-        button { padding: 12px 24px; cursor: pointer; background: #00ffcc; border: none; border-radius: 5px; font-weight: bold; margin: 5px; }
-        button.secondary { background: #636e72; color: white; }
-        #message { font-weight: bold; margin: 10px; min-height: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; text-align: center; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        
+        /* Interval Legend */
+        .legend { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tag { padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .r-tag { background: #ff4757; color: white; } /* Root */
+        .m3-tag { background: #2ed573; color: white; } /* Major 3rd */
+        .p5-tag { background: #1e90ff; color: white; } /* Perfect 5th */
+
+        .instruction-box { background: #1a1a1a; border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-top: 4px solid #ff4757; text-align: left; }
+        
+        .fretboard-wrap { overflow-x: auto; background: #222; padding: 20px; border-radius: 10px; box-shadow: inset 0 0 20px #000; }
+        .fretboard { display: inline-flex; flex-direction: column; background: #3d2b1f; padding: 10px; border: 2px solid #555; border-radius: 4px; }
+        .string { display: flex; position: relative; height: 45px; }
+        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #888; top: 50%; z-index: 1; }
+        .fret { width: 65px; border-right: 2px solid #666; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; }
+        .nut { border-right: 10px solid #ddd; width: 40px; }
+
+        /* Interval Circles */
+        .note { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border: 2px solid rgba(0,0,0,0.2); }
+        .r { background: #ff4757; box-shadow: 0 0 10px #ff4757; }
+        .m3 { background: #2ed573; box-shadow: 0 0 10px #2ed573; }
+        .p5 { background: #1e90ff; box-shadow: 0 0 10px #1e90ff; }
+
+        .btn-group { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; background: #444; color: white; }
+        button.active { background: #ff4757; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Guitar Note Teacher</h1>
-
-    <div class="lesson-box" id="lessonBox">
-        <h3 id="lessonTitle">Lesson 1: The Note E</h3>
-        <p id="lessonText">The guitar has two 'E' strings (the thickest and thinnest). Start by finding the Open strings and the 12th fret.</p>
-    </div>
-    
-    <div class="target-box">
-        <div>Find the note: <strong id="targetNote">E</strong></div>
-        <div id="message">Watch the highlights, then try to click them!</div>
+    <div class="instruction-box">
+        <h2 id="lesson-title">Interval Mode: The Major Triad</h2>
+        <p id="lesson-text">Instead of note names, we are looking at <b>Intervals</b>. This pattern builds a Major Chord. Move the Root to change the key!</p>
+        <div class="legend">
+            <span class="tag r-tag">1 (Root)</span>
+            <span class="tag m3-tag">3 (Major 3rd)</span>
+            <span class="tag p5-tag">5 (Perfect 5th)</span>
+        </div>
     </div>
 
-    <div class="fretboard" id="fretboard"></div>
-
-    <div class="controls">
-        <button onclick="toggleHints()" id="hintBtn">Show All Locations</button>
-        <button class="secondary" onclick="nextLevel()">Skip to Next Note</button>
+    <div class="fretboard-wrap">
+        <div class="fretboard" id="board"></div>
     </div>
+
+    <div class="btn-group">
+        <button onclick="changeKey(-1)">Key Down</button>
+        <button class="active" id="key-display">Key: C</button>
+        <button onclick="changeKey(1)">Key Up</button>
+    </div>
+    <p style="color: #888; margin-top: 15px;">Notice how the <b>shape</b> stays the same no matter what key you are in!</p>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const TUNING = [4, 11, 7, 2, 9, 4]; // E, B, G, D, A, E
-    let currentTarget = "E";
-    let showHints = true;
-    let level = 0; // Index of NOTES we are learning
-
-    const lessons = [
-        "The 'E' note is your anchor. It's the open 1st and 6th strings. It repeats at the 12th fret.",
-        "The 'A' note is the open 5th string. Notice how it's always 2 frets higher when you move down a string (except the B string!)",
-        "Now let's find 'D'. It's the open 4th string. Look for the triangle patterns!",
-        "Next is 'G'. Open 3rd string. All notes repeat every 12 frets."
-    ];
-
-    function initFretboard() {
-        const board = document.getElementById('fretboard');
-        board.innerHTML = '';
-        TUNING.forEach((root, sIdx) => {
-            const stringRow = document.createElement('div');
-            stringRow.className = 'string';
-            for (let fIdx = 0; fIdx <= 12; fIdx++) {
-                const fret = document.createElement('div');
-                fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
-                fret.onclick = () => handleNoteClick(sIdx, fIdx);
-                
-                // Add visual hint if enabled
-                const noteIdx = (TUNING[sIdx] + fIdx) % 12;
-                if (showHints && NOTES[noteIdx] === currentTarget) {
-                    const hint = document.createElement('div');
-                    hint.className = 'note-hint';
-                    hint.innerText = NOTES[noteIdx];
-                    fret.appendChild(hint);
-                }
-                stringRow.appendChild(fret);
-            }
-            board.appendChild(stringRow);
-        });
-    }
-
-    function handleNoteClick(sIdx, fIdx) {
-        const noteIdx = (TUNING[sIdx] + fIdx) % 12;
-        const clickedNote = NOTES[noteIdx];
-        const msg = document.getElementById('message');
-
-        if (clickedNote === currentTarget) {
-            msg.innerText = "✅ You found it! That's a " + currentTarget;
-            msg.style.color = "#00ffcc";
-            // If they find one while hints are off, they are learning!
-            if (!showHints) {
-                setTimeout(nextLevel, 1500);
-            }
-        } else {
-            msg.innerText = `❌ That's ${clickedNote}. Look for the highlighted circles.`;
-            msg.style.color = "#ff4d4d";
-        }
-    }
-
-    function toggleHints() {
-        showHints = !showHints;
-        document.getElementById('hintBtn').innerText = showHints ? "Hide Hints (Test Me)" : "Show Hints (Teach Me)";
-        initFretboard();
-    }
-
-    function nextLevel() {
-        level = (level + 1) % lessons.length;
-        // Basic progression: E -> A -> D -> G (The open strings)
-        const progression = ["E", "A", "D", "G"]; 
-        currentTarget = progression[level];
-        
-        document.getElementById('targetNote').innerText = currentTarget;
-        document.getElementById('lessonTitle').innerText = `Lesson: The Note ${currentTarget}`;
-        document.getElementById('lessonText').innerText = lessons[level];
-        
-        showHints = true; // Always show hints when a new note starts
-        document.getElementById('hintBtn').innerText = "Hide Hints (Test Me)";
-        initFretboard();
-    }
-
-    initFretboard();
-</script>
-</body>
-</html>
+    const STRINGS = [4, 11, 7, 2, 9, 4]; // E B G D A E
