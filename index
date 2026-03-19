@@ -1,0 +1,53 @@
+import React, { useState } from 'react';
+
+const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const STANDARD_TUNING = [4, 11, 7, 2, 9, 4]; // E, B, G, D, A, E (High to Low)
+
+const Fretboard = () => {
+  const [capo, setCapo] = useState(0);
+  const [tuning, setTuning] = useState(STANDARD_TUNING);
+  const [lastNote, setLastNote] = useState(null);
+
+  const handleFretClick = (stringIdx, fret) => {
+    const noteIdx = (tuning[stringIdx] + fret + capo) % 12;
+    setLastNote(NOTES[noteIdx]);
+    // Here is where you'd add the "Test Logic":
+    // if (NOTES[noteIdx] === targetNote) { scorePoint() }
+  };
+
+  return (
+    <div className="flex flex-col items-center p-8 bg-gray-900 text-white min-h-screen">
+      <h1 className="text-3xl font-bold mb-4">FretMaster Prototype</h1>
+      <div className="mb-6">
+        <span className="text-xl">Last Note Played: <b className="text-yellow-400">{lastNote || "-"}</b></span>
+      </div>
+
+      {/* The Fretboard Grid */}
+      <div className="relative border-2 border-gray-700 rounded-lg overflow-hidden bg-amber-900 shadow-2xl">
+        {tuning.map((root, sIdx) => (
+          <div key={sIdx} className="flex border-b border-gray-800 last:border-0 relative">
+            {/* String Wire Visual */}
+            <div className="absolute w-full h-[2px] bg-gray-300 top-1/2 shadow-sm z-0"></div>
+            
+            {[...Array(13)].map((_, fIdx) => (
+              <button
+                key={fIdx}
+                onClick={() => handleFretClick(sIdx, fIdx)}
+                className="w-16 h-12 border-r border-gray-500 relative z-10 hover:bg-white/10 transition-colors flex items-center justify-center"
+              >
+                {fIdx === 0 && <div className="absolute inset-0 bg-black/40"></div>}
+                <span className="text-xs opacity-0 hover:opacity-100 bg-black/60 px-1 rounded">
+                  {fIdx}
+                </span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+      
+      <p className="mt-4 text-gray-400 italic">Click any fret to see the note. (Capo: {capo})</p>
+    </div>
+  );
+};
+
+export default Fretboard;
