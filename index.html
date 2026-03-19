@@ -3,260 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fretboard Master Pro</title>
+    <title>Fretboard Master Pro + Quiz</title>
     <style>
         :root { 
-            --accent: #00ffcc; 
-            --bg: #0b0f1a; 
-            --panel: #1e293b; 
-            --wood: #2a1b0d;
-            --fret: #d1d5db;
+            --accent: #00ffcc; --bg: #0b0f1a; --panel: #1e293b; --wood: #2a1b0d;
+            /* Note Colors for Heatmap */
+            --C: #ff4757; --Cs: #ffa502; --D: #eccc68; --Ds: #2ed573;
+            --E: #1e90ff; --F: #3742fa; --Fs: #70a1ff; --G: #747d8c;
+            --Gs: #a29bfe; --A: #fd79a8; --As: #fab1a0; --B: #55efc4;
         }
 
-        body { 
-            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-            background: var(--bg); 
-            color: #fff; 
-            margin: 0; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-        }
-
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 1100px; width: 100%; }
 
-        header { 
-            background: var(--panel); 
-            padding: 20px; 
-            border-radius: 16px; 
-            border-top: 4px solid var(--accent);
-            margin-bottom: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+        header { background: var(--panel); padding: 20px; border-radius: 16px; border-top: 4px solid var(--accent); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Fretboard Engine */
-        .fretboard-wrap { 
-            overflow-x: auto; 
-            background: #05070a; 
-            padding: 60px 20px; 
-            border-radius: 20px; 
-            border: 1px solid #334155;
-            margin-bottom: 25px;
-        }
+        .stats { text-align: right; }
+        .score-val { font-size: 1.5rem; font-weight: 900; color: var(--accent); }
 
-        .fretboard { 
-            display: inline-flex; 
-            flex-direction: column; 
-            background: var(--wood); 
-            border: 4px solid #3d2b1f; 
-            position: relative;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
-        }
+        .fretboard-wrap { overflow-x: auto; background: #05070a; padding: 60px 20px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 25px; }
+        .fretboard { display: inline-flex; flex-direction: column; background: var(--wood); border: 4px solid #3d2b1f; position: relative; }
 
-        .string { 
-            display: flex; 
-            position: relative; 
-            height: 42px; 
-            align-items: center; 
-        }
+        .string { display: flex; position: relative; height: 42px; align-items: center; }
+        .string::after { content: ""; position: absolute; width: 100%; background: linear-gradient(to bottom, #94a3b8, #cbd5e1, #94a3b8); z-index: 1; pointer-events: none; }
+        .string[data-s="0"]::after { height: 1px; } .string[data-s="5"]::after { height: 4.5px; }
 
-        .string::after { 
-            content: ""; 
-            position: absolute; 
-            width: 100%; 
-            background: linear-gradient(to bottom, #94a3b8, #cbd5e1, #94a3b8); 
-            z-index: 1; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.4);
-            pointer-events: none;
-        }
+        .fret { width: 75px; height: 100%; border-right: 4px solid #d1d5db; display: flex; align-items: center; justify-content: center; z-index: 2; position: relative; cursor: pointer; transition: 0.2s; }
+        .nut { border-right: 12px solid #f8fafc; width: 40px; }
 
-        /* String Gauges */
-        .string[data-s="0"]::after { height: 1px; }
-        .string[data-s="1"]::after { height: 1.5px; }
-        .string[data-s="2"]::after { height: 2px; }
-        .string[data-s="3"]::after { height: 3px; }
-        .string[data-s="4"]::after { height: 3.5px; }
-        .string[data-s="5"]::after { height: 4.5px; }
-
-        .fret { 
-            width: 75px; 
-            height: 100%; 
-            border-right: 4px solid var(--fret); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 2; 
-            position: relative; 
-            cursor: pointer;
-        }
-
-        .fret:hover { background: rgba(255,255,255,0.05); }
-        .nut { border-right: 12px solid #f8fafc; width: 40px; background: #111; }
-
-        /* Capo Style */
-        .capo-bar {
-            background: rgba(212, 175, 55, 0.3) !important;
-            border-right: 10px solid #d4af37 !important;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.6);
-        }
-
-        /* Fret Markers */
-        .dot { 
-            position: absolute; 
-            width: 14px; 
-            height: 14px; 
-            background: rgba(255,255,255,0.2); 
-            border-radius: 50%; 
-            bottom: -35px; 
-            pointer-events: none; 
-        }
-
-        /* Note Visuals */
+        /* Animated Note Styles */
         .note { 
-            width: 34px; 
-            height: 34px; 
-            border-radius: 50%; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 0.75rem; 
-            font-weight: 900; 
-            z-index: 10; 
-            transition: transform 0.1s;
-            animation: pop 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 0.75rem; font-weight: 900; z-index: 10; animation: pop 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
         }
+        
+        /* Heatmap Colors */
+        .note.C { background: var(--C); } .note.Cs { background: var(--Cs); } .note.D { background: var(--D); }
+        .note.Ds { background: var(--Ds); } .note.E { background: var(--E); } .note.F { background: var(--F); }
+        .note.Fs { background: var(--Fs); } .note.G { background: var(--G); } .note.Gs { background: var(--Gs); }
+        .note.A { background: var(--A); } .note.As { background: var(--As); } .note.B { background: var(--B); }
 
-        .note span { font-size: 0.5rem; opacity: 0.7; margin-top: -2px; }
+        .correct { background: #fff !important; color: #000; box-shadow: 0 0 20px #fff; }
+        .wrong { background: #ff4757; color: #fff; animation: shake 0.4s; }
 
-        .correct { background: #fff; color: #000; box-shadow: 0 0 15px #fff; }
-        .highlight { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
-        .wrong { background: #ff4757; color: #fff; }
-        .ghost { opacity: 0.4; background: var(--accent); color: #000; pointer-events: none; }
-        .scale-note { background: #334155; color: #fff; border: 1px solid var(--accent); opacity: 0.8; }
-        .scale-root { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: var(--panel); padding: 20px; border-radius: 16px; }
+        button, select { padding: 12px; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .quiz-btn { background: var(--accent); color: #0f172a; border: none; }
+        .heatmap-btn { background: #8b5cf6; border: none; }
 
-        /* Controls */
-        .controls { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 15px; 
-            background: var(--panel); 
-            padding: 20px; 
-            border-radius: 16px; 
-        }
-
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold; }
-
-        select, button { 
-            padding: 12px; 
-            background: #0f172a; 
-            color: #fff; 
-            border: 1px solid #334155; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        button:hover { border-color: var(--accent); background: #1e293b; }
-        .primary-btn { background: var(--accent); color: #0f172a; border: none; }
-        .primary-btn:hover { background: #00e6b8; transform: translateY(-1px); }
-
-        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1 style="margin:0; font-size: 1.5rem; color: var(--accent);">Fretboard Master Pro</h1>
-        <p id="msg" style="margin: 5px 0 0 0; color: #94a3b8;">Welcome. Select a mode to begin.</p>
+        <div>
+            <h1 style="margin:0; font-size: 1.2rem; color: var(--accent);">Fretboard Master Pro</h1>
+            <p id="msg" style="margin: 5px 0 0 0; color: #94a3b8;">Click 'Start Quiz' to test your speed!</p>
+        </div>
+        <div class="stats">
+            <div style="font-size: 0.7rem; opacity: 0.6;">CURRENT SCORE</div>
+            <div id="scoreDisplay" class="score-val">0</div>
+        </div>
     </header>
 
     <div class="fretboard-wrap">
-        <div class="fretboard" id="board" onmouseleave="clearGhost()"></div>
+        <div class="fretboard" id="board"></div>
     </div>
 
     <div class="controls">
-        <div class="control-group">
-            <label>Training Mode</label>
-            <button class="primary-btn" onclick="startTrainer()">Start Note Trainer</button>
-        </div>
-
-        <div class="control-group">
-            <label>Movable Shapes</label>
-            <select id="shapeSelect" onchange="setMode('shape', this.value)">
-                <option value="">-- Select Shape --</option>
-                <option value="power">Power Chord (R-5-8)</option>
-                <option value="majorTriad">Major Triad (R-3-5)</option>
-                <option value="minorTriad">Minor Triad (R-b3-5)</option>
-                <option value="dom7">Dominant 7th (R-3-5-b7)</option>
-            </select>
-        </div>
-
-        <div class="control-group">
-            <label>Scale Explorer</label>
-            <div style="display:flex; gap:5px;">
-                <select id="keySelect" onchange="updateScale()" style="flex:1;">
-                    <option value="0">C</option><option value="2">D</option>
-                    <option value="4">E</option><option value="5">F</option>
-                    <option value="7">G</option><option value="9">A</option><option value="11">B</option>
-                </select>
-                <select id="scaleType" onchange="updateScale()" style="flex:2;">
-                    <option value="none">-- Scale --</option>
-                    <option value="major">Major</option>
-                    <option value="minor">Minor</option>
-                    <option value="pentatonic">Pentatonic</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <label>Guitar Setup</label>
-            <div style="display:flex; gap:5px;">
-                <select id="tuningSelect" onchange="updateTuning(this.value)" style="flex:1;">
-                    <option value="standard">Standard</option>
-                    <option value="dropD">Drop D</option>
-                    <option value="dadgad">DADGAD</option>
-                </select>
-                <select id="capoSelect" onchange="updateCapo(this.value)" style="flex:1;">
-                    <option value="0">No Capo</option>
-                    <option value="1">Capo 1</option>
-                    <option value="3">Capo 3</option>
-                    <option value="5">Capo 5</option>
-                </select>
-            </div>
+        <button class="quiz-btn" onclick="startQuiz()">Start Note Quiz</button>
+        <button class="heatmap-btn" onclick="toggleHeatmap()">Toggle Heatmap</button>
+        <select id="tuningSelect" onchange="updateTuning(this.value)">
+            <option value="standard">Standard Tuning</option>
+            <option value="dropD">Drop D Tuning</option>
+        </select>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 0.7rem; color: #94a3b8;">CAPO POSITION</label>
+            <input type="range" min="0" max="7" value="0" oninput="updateCapo(this.value)">
         </div>
     </div>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const TUNINGS = {
-        standard: [4, 11, 7, 2, 9, 4],
-        dropD: [4, 11, 7, 2, 9, 2],
-        dadgad: [2, 9, 7, 2, 9, 2]
-    };
-    const SHAPES = {
-        power: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: 2, i: '5'}, {s: 2, f: 2, i: '8'} ],
-        majorTriad: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -1, i: '3'}, {s: 2, f: -2, i: '5'} ],
-        minorTriad: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -2, i: 'b3'}, {s: 2, f: -2, i: '5'} ],
-        dom7: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -1, i: '3'}, {s: 2, f: -2, i: 'b7'} ]
-    };
-    const SCALES = {
-        major: [0, 2, 4, 5, 7, 9, 11],
-        minor: [0, 2, 3, 5, 7, 8, 10],
-        pentatonic: [0, 3, 5, 7, 10]
-    };
-
-    let currentMode = 'map';
+    const TUNINGS = { standard: [4, 11, 7, 2, 9, 4], dropD: [4, 11, 7, 2, 9, 2] };
+    
     let currentTuning = TUNINGS.standard;
     let capoPos = 0;
+    let score = 0;
     let targetNote = "";
-    let activeShape = null;
+    let isQuizActive = false;
+    let isHeatmapActive = false;
 
     function initBoard() {
         const board = document.getElementById('board');
@@ -270,99 +110,74 @@
                 const isCapo = (fIdx === capoPos && capoPos !== 0);
                 fret.className = 'fret' + (fIdx === 0 ? ' nut' : '') + (isCapo ? ' capo-bar' : '');
                 
+                // Logic for real note calculation with Capo
                 const noteIdx = (root + fIdx + (fIdx === 0 ? capoPos : 0)) % 12;
                 fret.dataset.note = NOTES[noteIdx];
-                
-                if (fIdx < capoPos && fIdx !== 0) {
-                    fret.style.opacity = "0.1";
-                    fret.style.pointerEvents = "none";
-                }
+                fret.dataset.raw = noteIdx; // For color mapping
 
-                fret.onmouseenter = () => handleHover(sIdx, fIdx);
-                fret.onclick = () => handleClick(sIdx, fIdx, fret);
-                
-                if (sIdx === 5 && [3,5,7,9,12].includes(fIdx)) {
-                    const dot = document.createElement('div');
-                    dot.className = 'dot';
-                    fret.appendChild(dot);
-                }
+                fret.onclick = () => handleFretClick(fret);
                 row.appendChild(fret);
             }
             board.appendChild(row);
         });
     }
 
-    function setMode(mode, val) {
-        currentMode = mode;
-        activeShape = (mode === 'shape') ? SHAPES[val] : null;
-        document.getElementById('scaleType').value = "none"; // Reset scale UI
-        clearBoard();
+    function toggleHeatmap() {
+        isHeatmapActive = !isHeatmapActive;
+        isQuizActive = false;
+        renderNotes();
     }
 
-    function startTrainer() {
-        currentMode = 'lesson';
-        targetNote = NOTES[Math.floor(Math.random() * NOTES.length)];
-        activeShape = null;
-        clearBoard();
-        document.getElementById('msg').innerText = `Find all ${targetNote} positions!`;
-    }
+    function renderNotes() {
+        document.querySelectorAll('.note').forEach(n => n.remove());
+        if (!isHeatmapActive) return;
 
-    function updateScale() {
-        currentMode = 'scale';
-        activeShape = null;
-        const rootKey = parseInt(document.getElementById('keySelect').value);
-        const type = document.getElementById('scaleType').value;
-        if (type === "none") return clearBoard();
-
-        const pattern = SCALES[type];
-        const scaleNotes = pattern.map(i => NOTES[(rootKey + i) % 12]);
-        
-        clearBoard();
         document.querySelectorAll('.fret').forEach(f => {
-            if (scaleNotes.includes(f.dataset.note)) {
-                const isRoot = f.dataset.note === NOTES[rootKey];
-                f.innerHTML += `<div class="note ${isRoot ? 'scale-root' : 'scale-note'}">${f.dataset.note}</div>`;
-            }
+            const noteName = f.dataset.note;
+            const noteClass = noteName.replace('#', 's');
+            f.innerHTML += `<div class="note ${noteClass}">${noteName}</div>`;
         });
     }
 
-    function handleHover(sIdx, fIdx) {
-        if (currentMode !== 'shape' || !activeShape) return;
-        clearGhost();
-        drawShape(sIdx, fIdx, 'ghost');
+    function startQuiz() {
+        isQuizActive = true;
+        isHeatmapActive = false;
+        score = 0;
+        updateScore(0);
+        nextQuizTurn();
     }
 
-    function handleClick(sIdx, fIdx, fret) {
-        if (currentMode === 'shape' && activeShape) {
-            clearBoard();
-            drawShape(sIdx, fIdx, 'highlight');
-        } else if (currentMode === 'lesson') {
-            if (fret.dataset.note === targetNote) {
-                fret.innerHTML = `<div class="note correct">${targetNote}</div>`;
-            } else {
-                const err = document.createElement('div');
-                err.className = 'note wrong';
-                err.innerText = fret.dataset.note;
-                fret.appendChild(err);
-                setTimeout(() => err.remove(), 600);
-            }
+    function nextQuizTurn() {
+        targetNote = NOTES[Math.floor(Math.random() * NOTES.length)];
+        document.getElementById('msg').innerText = `QUICK! Find a ${targetNote} note!`;
+        document.querySelectorAll('.note').forEach(n => n.remove());
+    }
+
+    function handleFretClick(fret) {
+        if (!isQuizActive) return;
+
+        if (fret.dataset.note === targetNote) {
+            score += 10;
+            updateScore(score);
+            fret.innerHTML = `<div class="note correct">${targetNote}</div>`;
+            setTimeout(nextQuizTurn, 500);
+        } else {
+            score = Math.max(0, score - 5);
+            updateScore(score);
+            const err = document.createElement('div');
+            err.className = 'note wrong';
+            err.innerText = fret.dataset.note;
+            fret.appendChild(err);
+            setTimeout(() => err.remove(), 600);
         }
     }
 
-    function drawShape(anchorS, anchorF, cls) {
-        activeShape.forEach(off => {
-            const ts = anchorS - off.s, tf = anchorF + off.f;
-            if (ts >= 0 && ts < 6 && tf >= 0 && tf <= 12) {
-                const f = document.querySelector(`.string[data-s="${ts}"]`).children[tf];
-                f.innerHTML += `<div class="note ${cls}">${f.dataset.note}<span>${off.i}</span></div>`;
-            }
-        });
+    function updateScore(val) {
+        document.getElementById('scoreDisplay').innerText = val;
     }
 
     function updateTuning(v) { currentTuning = TUNINGS[v]; initBoard(); }
     function updateCapo(v) { capoPos = parseInt(v); initBoard(); }
-    function clearBoard() { document.querySelectorAll('.note').forEach(n => n.remove()); }
-    function clearGhost() { document.querySelectorAll('.ghost').forEach(n => n.remove()); }
 
     initBoard();
 </script>
