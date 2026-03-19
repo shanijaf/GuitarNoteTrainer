@@ -3,154 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuitarNoteTrainer - The Lessons</title>
+    <title>GuitarNoteTrainer - String Pairs</title>
     <style>
-        :root { --primary: #38bdf8; --bg: #0f172a; --panel: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; text-align: center; padding: 20px; margin: 0; }
-        .container { max-width: 1000px; margin: auto; }
+        :root { --accent: #00ffcc; --bg: #121212; --panel: #1e1e1e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 900px; margin: auto; }
         
-        /* Lesson Overlay */
-        #lesson-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; visibility: hidden; }
-        .lesson-content { background: var(--panel); padding: 40px; border-radius: 20px; max-width: 600px; border: 2px solid var(--primary); text-align: left; }
-        .lesson-content h2 { color: var(--primary); margin-top: 0; }
-        .diagram-box { background: #000; padding: 15px; border-radius: 8px; font-family: monospace; color: #00ffcc; margin: 20px 0; line-height: 1.4; }
-
-        /* Mastery Stats */
-        .mastery-ui { background: var(--panel); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-around; align-items: center; }
-        .stat { font-weight: bold; font-size: 1.2rem; }
-        .stat span { display: block; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+        /* Lesson Box */
+        .lesson-header { background: var(--panel); border: 2px solid #333; border-top: 6px solid var(--accent); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
+        .lesson-header h2 { color: var(--accent); margin: 0; }
+        .step-indicator { color: #888; font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; display: block; }
+        .tip-text { background: rgba(0, 255, 204, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid var(--accent); }
 
         /* Fretboard */
-        .fretboard-wrap { overflow-x: auto; padding: 20px 0; }
-        .fretboard { display: inline-flex; flex-direction: column; background: #2d1b0e; padding: 10px; border: 3px solid #444; position: relative; }
-        .string { display: flex; position: relative; height: 42px; border-bottom: 1px solid #444; }
-        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #94a3b8; top: 50%; z-index: 1; }
-        .fret { width: 60px; border-right: 3px solid #bcbcbc; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; position: relative; }
+        .fretboard-wrap { overflow-x: auto; background: #000; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .fret-nums { display: flex; margin-left: 45px; color: #666; font-size: 0.8rem; margin-bottom: 5px; }
+        .fretboard { display: inline-flex; flex-direction: column; background: #2d1b0e; padding: 10px; border: 2px solid #444; }
+        .string { display: flex; position: relative; height: 42px; }
+        .string::after { content: ""; position: absolute; width: 100%; height: 2px; background: #888; top: 50%; z-index: 1; }
+        .fret { width: 60px; border-right: 3px solid #777; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; }
         .nut { border-right: 10px solid #fff; width: 35px; background: #000; }
         
-        .fret-num { color: #64748b; font-size: 0.8rem; margin-top: 5px; }
-        .note { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
-        .correct { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-        .wrong { background: #ef4444; color: white; }
+        /* Note Bubbles */
+        .note { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; z-index: 10; }
+        .highlight { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); border: 2px solid #fff; }
+        .correct { background: #fff; color: #000; }
+        .wrong { background: #ff4d4d; color: #fff; }
 
-        button { padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: var(--primary); color: #000; }
+        /* Buttons */
+        .btn-panel { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        button { padding: 15px 30px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .primary-btn { background: var(--accent); color: #000; }
+        .test-btn { background: #fff; color: #000; display: none; }
+        button:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-<div id="lesson-overlay">
-    <div class="lesson-content">
-        <h2 id="l-title">Lesson 1: The Octave Jump</h2>
-        <p id="l-text">The most important trick is the <b>Octave Shape</b>. Go down 2 strings and right 2 frets to find the same note!</p>
-        <div class="diagram-box" id="l-diagram">
-            E |---(X)---| (High E)<br>
-            B |---------|<br>
-            G |---------|<br>
-            D |---(X)---| (2 strings down, 2 frets over)<br>
-            A |---------|<br>
-            E |---(R)---| (Start here)
-        </div>
-        <button onclick="hideLesson()">I Understand - Start Test</button>
-    </div>
-</div>
-
 <div class="container">
-    <h1>Guitar Note Teacher</h1>
-    <div class="mastery-ui">
-        <div class="stat"><span>Target</span><div id="target-display">E</div></div>
-        <div class="stat"><span>Accuracy</span><div id="acc-display">0%</div></div>
-        <div class="stat"><span>Goal</span><div>90% to Pass</div></div>
-        <button onclick="showLesson()">Review Lesson</button>
+    <div class="lesson-header">
+        <span class="step-indicator" id="step-count">Lesson 1 of 3</span>
+        <h2 id="l-title">The Mirror Strings (E)</h2>
+        <div class="tip-text" id="l-text">The thickest string (6) and thinnest (1) are both E strings. They look exactly the same.</div>
+        <p id="l-subtext">Click "Show Pattern" to see the E notes on these two strings.</p>
     </div>
 
     <div class="fretboard-wrap">
+        <div class="fret-nums" id="nums"></div>
         <div class="fretboard" id="board"></div>
-        <div style="display: flex; margin-left: 45px;" id="fret-nums"></div>
     </div>
+
+    <div class="btn-panel">
+        <button id="showBtn" class="primary-btn" onclick="showPattern()">Show Pattern</button>
+        <button id="testBtn" class="test-btn" onclick="startTest()">I Remember - Test Me</button>
+        <button id="nextBtn" class="primary-btn" style="display:none;" onclick="nextStep()">Mastered! Next Pair</button>
+    </div>
+    
+    <div id="msg" style="margin-top: 15px; font-weight: bold; color: var(--accent);"></div>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     const STRINGS = [4, 11, 7, 2, 9, 4]; // E B G D A E
     
-    const CURRICULUM = [
+    const STEPS = [
         {
-            note: "E",
-            title: "Lesson 1: The E Mirror",
-            text: "TRICK: The 1st and 6th strings are identical. If you find an E on the bottom, it's in the same spot on the top! Also, everything repeats at Fret 12.",
-            diagram: "E |--(0)--[12]--|<br>B |-------------|<br>G |-------------|<br>D |-------------|<br>A |-------------|<br>E |--(0)--[12]--|"
+            title: "The Mirror Strings (6 & 1)",
+            text: "Strings 6 and 1 are both E. Whatever happens on the thick string happens on the thin string.",
+            strings: [0, 5], // High E and Low E
+            note: "E"
         },
         {
-            note: "A",
-            title: "Lesson 2: The 'L' Shape",
-            text: "TRICK: To find an octave, move down 2 strings and 2 frets to the right. This works for the E, A, and D strings!",
-            diagram: "E |-------------|<br>B |-------------|<br>G |-------(X)---|<br>D |-------------|<br>A |---(R)-------|<br>E |-------------|<br> (R)oot to (X)octave"
+            title: "The Octave Jump (4 & 2)",
+            text: "On strings 4 and 2, the E notes are always 3 frets apart. Look at Fret 2 and Fret 5.",
+            strings: [2, 4], // D and B strings
+            note: "E"
+        },
+        {
+            title: "The Power Shape (5 & 3)",
+            text: "On strings 5 and 3, the E notes are 2 frets apart. Check Fret 7 and Fret 9.",
+            strings: [1, 3], // A and G strings
+            note: "E"
         }
     ];
 
-    let currentLvl = 0;
-    let hits = 0;
-    let attempts = 0;
+    let currentStep = 0;
+    let mode = "idle"; // idle, showing, testing
+    let score = 0;
 
-    function showLesson() { document.getElementById('lesson-overlay').style.visibility = 'visible'; }
-    function hideLesson() { document.getElementById('lesson-overlay').style.visibility = 'hidden'; }
-
-    function render() {
-        const lesson = CURRICULUM[currentLvl];
-        document.getElementById('l-title').innerText = lesson.title;
-        document.getElementById('l-text').innerText = lesson.text;
-        document.getElementById('l-diagram').innerHTML = lesson.diagram;
-        document.getElementById('target-display').innerText = lesson.note;
-
+    function render(showHighlights = false) {
         const board = document.getElementById('board');
-        const nums = document.getElementById('fret-nums');
-        board.innerHTML = ''; nums.innerHTML = '<div style="width:35px"></div>';
-
+        const numBar = document.getElementById('nums');
+        const step = STEPS[currentStep];
+        
+        board.innerHTML = '';
+        numBar.innerHTML = '<div style="width:35px">Nut</div>';
+        
         STRINGS.forEach((root, sIdx) => {
             const row = document.createElement('div');
             row.className = 'string';
+            
+            // Dim strings not in the current lesson
+            if (!step.strings.includes(sIdx)) row.style.opacity = "0.2";
+
             for (let fIdx = 0; fIdx <= 12; fIdx++) {
                 const fret = document.createElement('div');
                 fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
-                fret.onclick = () => handleInput(sIdx, fIdx);
+                fret.onclick = () => handleFretClick(sIdx, fIdx);
+
+                const noteName = NOTES[(root + fIdx) % 12];
+                if (showHighlights && step.strings.includes(sIdx) && noteName === step.note) {
+                    fret.innerHTML = `<div class="note highlight">${noteName}</div>`;
+                }
+                
                 row.appendChild(fret);
-                if (sIdx === 0) nums.innerHTML += `<div style="width:60px">${fIdx}</div>`;
+                if (sIdx === 0) numBar.innerHTML += `<div style="width:60px">${fIdx}</div>`;
             }
             board.appendChild(row);
         });
     }
 
-    function handleInput(sIdx, fIdx) {
-        attempts++;
-        const target = CURRICULUM[currentLvl].note;
+    function showPattern() {
+        mode = "showing";
+        render(true);
+        document.getElementById('showBtn').style.display = 'none';
+        document.getElementById('testBtn').style.display = 'block';
+        document.getElementById('msg').innerText = "Study the position of the E notes on these two strings.";
+    }
+
+    function startTest() {
+        mode = "testing";
+        score = 0;
+        render(false);
+        document.getElementById('testBtn').style.display = 'none';
+        document.getElementById('msg').innerText = "Find all E notes on the active (bright) strings!";
+    }
+
+    function handleFretClick(sIdx, fIdx) {
+        if (mode !== "testing") return;
+        const step = STEPS[currentStep];
+        if (!step.strings.includes(sIdx)) return;
+
         const clicked = NOTES[(STRINGS[sIdx] + fIdx) % 12];
         const fretEl = document.getElementById('board').children[sIdx].children[fIdx];
 
-        if (clicked === target) {
-            hits++;
-            fretEl.innerHTML = `<div class="note correct">${clicked}</div>`;
+        if (clicked === step.note) {
+            if (!fretEl.querySelector('.note')) {
+                score++;
+                fretEl.innerHTML = `<div class="note correct">${clicked}</div>`;
+                if (score >= 4) { // 2 notes per string (Open and 12th usually)
+                    document.getElementById('msg').innerText = "✅ Perfect! You've mastered this pair.";
+                    document.getElementById('nextBtn').style.display = 'block';
+                }
+            }
         } else {
             const n = document.createElement('div');
-            n.className = 'note wrong';
-            n.innerText = clicked;
-            fretEl.appendChild(n);
-            setTimeout(() => n.remove(), 1000);
-        }
-
-        const acc = Math.round((hits / attempts) * 100);
-        document.getElementById('acc-display').innerText = acc + "%";
-
-        if (acc >= 90 && hits >= 5) {
-            alert("Mastered! Moving to next pattern.");
-            currentLvl++;
-            hits = 0; attempts = 0;
-            render();
-            showLesson();
-        }
-    }
-
-    render();
-    showLesson();
-</script>
-</body>
-</html>
+            n.
