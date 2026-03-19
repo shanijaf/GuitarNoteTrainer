@@ -3,100 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GuitarNoteTrainer - Clean Logic Edition</title>
+    <title>Fretboard Master Pro</title>
     <style>
-        :root { --accent: #00ffcc; --bg: #0f172a; --panel: #1e293b; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        :root { 
+            --accent: #00ffcc; 
+            --bg: #0b0f1a; 
+            --panel: #1e293b; 
+            --wood: #2a1b0d;
+            --fret: #d1d5db;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: #fff; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
         .container { max-width: 1100px; width: 100%; }
-        
-        /* Fretboard CSS - Procedural rendering */
-        .fretboard-wrap { overflow-x: auto; background: #07090e; padding: 50px 10px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .fretboard { display: inline-flex; flex-direction: column; background: #2a1b0d; border: 4px solid #3d2b1f; position: relative; cursor: crosshair; }
-        
-        .string { display: flex; position: relative; height: 42px; align-items: center; }
-        .string::after { content: ""; position: absolute; width: 100%; background: linear-gradient(to bottom, #94a3b8, #64748b, #94a3b8); z-index: 1; pointer-events: none; }
-        /* Procedural String Thickness */
-        .string[data-s="0"]::after { height: 1px; } .string[data-s="1"]::after { height: 1.5px; } .string[data-s="2"]::after { height: 2px; }
-        .string[data-s="3"]::after { height: 3px; } .string[data-s="4"]::after { height: 3.5px; } .string[data-s="5"]::after { height: 4.5px; }
 
-        .fret { width: 75px; height: 100%; border-right: 4px solid #d1d5db; display: flex; align-items: center; justify-content: center; z-index: 2; position: relative; }
-        .nut { border-right: 12px solid #f8fafc; width: 40px; }
-        
-        /* Fret Markers (Dots) - CSS Only */
-        .dot { position: absolute; width: 14px; height: 14px; background: rgba(255,255,255,0.15); border-radius: 50%; bottom: -35px; pointer-events: none; }
+        header { 
+            background: var(--panel); 
+            padding: 20px; 
+            border-radius: 16px; 
+            border-top: 4px solid var(--accent);
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
-        /* Notes & Intervals */
-        .note { width: 34px; height: 34px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; z-index: 10; transition: 0.1s; }
-        .note span { font-size: 0.55rem; opacity: 0.8; } /* For Interval text */
-        
+        /* Fretboard Engine */
+        .fretboard-wrap { 
+            overflow-x: auto; 
+            background: #05070a; 
+            padding: 60px 20px; 
+            border-radius: 20px; 
+            border: 1px solid #334155;
+            margin-bottom: 25px;
+        }
+
+        .fretboard { 
+            display: inline-flex; 
+            flex-direction: column; 
+            background: var(--wood); 
+            border: 4px solid #3d2b1f; 
+            position: relative;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+
+        .string { 
+            display: flex; 
+            position: relative; 
+            height: 42px; 
+            align-items: center; 
+        }
+
+        .string::after { 
+            content: ""; 
+            position: absolute; 
+            width: 100%; 
+            background: linear-gradient(to bottom, #94a3b8, #cbd5e1, #94a3b8); 
+            z-index: 1; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            pointer-events: none;
+        }
+
+        /* String Gauges */
+        .string[data-s="0"]::after { height: 1px; }
+        .string[data-s="1"]::after { height: 1.5px; }
+        .string[data-s="2"]::after { height: 2px; }
+        .string[data-s="3"]::after { height: 3px; }
+        .string[data-s="4"]::after { height: 3.5px; }
+        .string[data-s="5"]::after { height: 4.5px; }
+
+        .fret { 
+            width: 75px; 
+            height: 100%; 
+            border-right: 4px solid var(--fret); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 2; 
+            position: relative; 
+            cursor: pointer;
+        }
+
+        .fret:hover { background: rgba(255,255,255,0.05); }
+        .nut { border-right: 12px solid #f8fafc; width: 40px; background: #111; }
+
+        /* Capo Style */
+        .capo-bar {
+            background: rgba(212, 175, 55, 0.3) !important;
+            border-right: 10px solid #d4af37 !important;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.6);
+        }
+
+        /* Fret Markers */
+        .dot { 
+            position: absolute; 
+            width: 14px; 
+            height: 14px; 
+            background: rgba(255,255,255,0.2); 
+            border-radius: 50%; 
+            bottom: -35px; 
+            pointer-events: none; 
+        }
+
+        /* Note Visuals */
+        .note { 
+            width: 34px; 
+            height: 34px; 
+            border-radius: 50%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 0.75rem; 
+            font-weight: 900; 
+            z-index: 10; 
+            transition: transform 0.1s;
+            animation: pop 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .note span { font-size: 0.5rem; opacity: 0.7; margin-top: -2px; }
+
         .correct { background: #fff; color: #000; box-shadow: 0 0 15px #fff; }
-        .wrong { background: #ff4757; color: #fff; transform: scale(0.8); }
-        .shape-node { background: #facc15; color: #000; box-shadow: 0 0 20px #facc15; border: 2px solid #000; }
-        .ghost { opacity: 0.4; pointer-events: none; background: var(--accent); color: #000; }
+        .highlight { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
+        .wrong { background: #ff4757; color: #fff; }
+        .ghost { opacity: 0.4; background: var(--accent); color: #000; pointer-events: none; }
+        .scale-note { background: #334155; color: #fff; border: 1px solid var(--accent); opacity: 0.8; }
+        .scale-root { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent); }
 
         /* Controls */
-        .btn-panel { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; background: var(--panel); padding: 20px; border-radius: 12px; }
-        button, select { padding: 12px 20px; border-radius: 8px; border: 1px solid #334155; font-weight: bold; cursor: pointer; background: #0f172a; color: white; }
-        button:hover { border-color: var(--accent); }
-        .active-btn { background: var(--accent); color: #0f172a; }
+        .controls { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            background: var(--panel); 
+            padding: 20px; 
+            border-radius: 16px; 
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold; }
+
+        select, button { 
+            padding: 12px; 
+            background: #0f172a; 
+            color: #fff; 
+            border: 1px solid #334155; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover { border-color: var(--accent); background: #1e293b; }
+        .primary-btn { background: var(--accent); color: #0f172a; border: none; }
+        .primary-btn:hover { background: #00e6b8; transform: translateY(-1px); }
+
+        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div style="text-align: left; margin-bottom: 20px;">
-        <h2 id="l-title" style="margin:0; color: var(--accent);">Fretboard Mastery</h2>
-        <p id="msg" style="margin: 5px 0 0 0; opacity: 0.8;">Choose a module to start practicing.</p>
-    </div>
+    <header>
+        <h1 style="margin:0; font-size: 1.5rem; color: var(--accent);">Fretboard Master Pro</h1>
+        <p id="msg" style="margin: 5px 0 0 0; color: #94a3b8;">Welcome. Select a mode to begin.</p>
+    </header>
 
     <div class="fretboard-wrap">
         <div class="fretboard" id="board" onmouseleave="clearGhost()"></div>
     </div>
 
-    <div class="btn-panel">
-        <select id="shapeSelect" onchange="setMode('shape', this.value)">
-            <option value="">-- Movable Shapes --</option>
-            <option value="majorTriad">Major Triad (R-3-5)</option>
-            <option value="minorTriad">Minor Triad (R-b3-5)</option>
-            <option value="power">Power Chord (R-5-8)</option>
-            <option value="dom7">Dominant 7th (R-3-5-b7)</option>
-        </select>
-        <button id="lessonBtn" onclick="setMode('lesson')">Note Trainer</button>
-        <button id="mapBtn" onclick="setMode('map')">Full Map</button>
+    <div class="controls">
+        <div class="control-group">
+            <label>Training Mode</label>
+            <button class="primary-btn" onclick="startTrainer()">Start Note Trainer</button>
+        </div>
+
+        <div class="control-group">
+            <label>Movable Shapes</label>
+            <select id="shapeSelect" onchange="setMode('shape', this.value)">
+                <option value="">-- Select Shape --</option>
+                <option value="power">Power Chord (R-5-8)</option>
+                <option value="majorTriad">Major Triad (R-3-5)</option>
+                <option value="minorTriad">Minor Triad (R-b3-5)</option>
+                <option value="dom7">Dominant 7th (R-3-5-b7)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Scale Explorer</label>
+            <div style="display:flex; gap:5px;">
+                <select id="keySelect" onchange="updateScale()" style="flex:1;">
+                    <option value="0">C</option><option value="2">D</option>
+                    <option value="4">E</option><option value="5">F</option>
+                    <option value="7">G</option><option value="9">A</option><option value="11">B</option>
+                </select>
+                <select id="scaleType" onchange="updateScale()" style="flex:2;">
+                    <option value="none">-- Scale --</option>
+                    <option value="major">Major</option>
+                    <option value="minor">Minor</option>
+                    <option value="pentatonic">Pentatonic</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Guitar Setup</label>
+            <div style="display:flex; gap:5px;">
+                <select id="tuningSelect" onchange="updateTuning(this.value)" style="flex:1;">
+                    <option value="standard">Standard</option>
+                    <option value="dropD">Drop D</option>
+                    <option value="dadgad">DADGAD</option>
+                </select>
+                <select id="capoSelect" onchange="updateCapo(this.value)" style="flex:1;">
+                    <option value="0">No Capo</option>
+                    <option value="1">Capo 1</option>
+                    <option value="3">Capo 3</option>
+                    <option value="5">Capo 5</option>
+                </select>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const STRINGS = [4, 11, 7, 2, 9, 4]; // E B G D A E
-    
-    // Shapes defined by {stringOffset, fretOffset, intervalName}
+    const TUNINGS = {
+        standard: [4, 11, 7, 2, 9, 4],
+        dropD: [4, 11, 7, 2, 9, 2],
+        dadgad: [2, 9, 7, 2, 9, 2]
+    };
     const SHAPES = {
+        power: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: 2, i: '5'}, {s: 2, f: 2, i: '8'} ],
         majorTriad: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -1, i: '3'}, {s: 2, f: -2, i: '5'} ],
         minorTriad: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -2, i: 'b3'}, {s: 2, f: -2, i: '5'} ],
-        power: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: 2, i: '5'}, {s: 2, f: 2, i: '8'} ],
-        dom7: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -1, i: '3'}, {s: 2, f: -2, i: 'b7'}, {s: 3, f: -2, i: '5'} ]
+        dom7: [ {s: 0, f: 0, i: 'R'}, {s: 1, f: -1, i: '3'}, {s: 2, f: -2, i: 'b7'} ]
+    };
+    const SCALES = {
+        major: [0, 2, 4, 5, 7, 9, 11],
+        minor: [0, 2, 3, 5, 7, 8, 10],
+        pentatonic: [0, 3, 5, 7, 10]
     };
 
-    let currentMode = 'lesson';
-    let targetNote = "C";
+    let currentMode = 'map';
+    let currentTuning = TUNINGS.standard;
+    let capoPos = 0;
+    let targetNote = "";
     let activeShape = null;
 
     function initBoard() {
         const board = document.getElementById('board');
         board.innerHTML = '';
-        STRINGS.forEach((root, sIdx) => {
+        currentTuning.forEach((root, sIdx) => {
             const row = document.createElement('div');
             row.className = 'string';
             row.dataset.s = sIdx;
             for (let fIdx = 0; fIdx <= 12; fIdx++) {
                 const fret = document.createElement('div');
-                fret.className = 'fret' + (fIdx === 0 ? ' nut' : '');
-                fret.dataset.note = NOTES[(root + fIdx) % 12];
+                const isCapo = (fIdx === capoPos && capoPos !== 0);
+                fret.className = 'fret' + (fIdx === 0 ? ' nut' : '') + (isCapo ? ' capo-bar' : '');
+                
+                const noteIdx = (root + fIdx + (fIdx === 0 ? capoPos : 0)) % 12;
+                fret.dataset.note = NOTES[noteIdx];
+                
+                if (fIdx < capoPos && fIdx !== 0) {
+                    fret.style.opacity = "0.1";
+                    fret.style.pointerEvents = "none";
+                }
+
                 fret.onmouseenter = () => handleHover(sIdx, fIdx);
                 fret.onclick = () => handleClick(sIdx, fIdx, fret);
                 
-                // Add Dots (3, 5, 7, 9, 12)
                 if (sIdx === 5 && [3,5,7,9,12].includes(fIdx)) {
                     const dot = document.createElement('div');
                     dot.className = 'dot';
@@ -111,16 +295,35 @@
     function setMode(mode, val) {
         currentMode = mode;
         activeShape = (mode === 'shape') ? SHAPES[val] : null;
-        document.querySelectorAll('.note').forEach(n => n.remove());
+        document.getElementById('scaleType').value = "none"; // Reset scale UI
+        clearBoard();
+    }
+
+    function startTrainer() {
+        currentMode = 'lesson';
+        targetNote = NOTES[Math.floor(Math.random() * NOTES.length)];
+        activeShape = null;
+        clearBoard();
+        document.getElementById('msg').innerText = `Find all ${targetNote} positions!`;
+    }
+
+    function updateScale() {
+        currentMode = 'scale';
+        activeShape = null;
+        const rootKey = parseInt(document.getElementById('keySelect').value);
+        const type = document.getElementById('scaleType').value;
+        if (type === "none") return clearBoard();
+
+        const pattern = SCALES[type];
+        const scaleNotes = pattern.map(i => NOTES[(rootKey + i) % 12]);
         
-        if (mode === 'lesson') {
-            targetNote = NOTES[Math.floor(Math.random() * NOTES.length)];
-            document.getElementById('msg').innerText = `Find all ${targetNote} notes on the neck.`;
-        } else if (mode === 'shape') {
-            document.getElementById('msg').innerText = "Hover to see the shape, click to lock it.";
-        } else {
-            document.getElementById('msg').innerText = "Click a note to highlight all occurrences.";
-        }
+        clearBoard();
+        document.querySelectorAll('.fret').forEach(f => {
+            if (scaleNotes.includes(f.dataset.note)) {
+                const isRoot = f.dataset.note === NOTES[rootKey];
+                f.innerHTML += `<div class="note ${isRoot ? 'scale-root' : 'scale-note'}">${f.dataset.note}</div>`;
+            }
+        });
     }
 
     function handleHover(sIdx, fIdx) {
@@ -129,46 +332,39 @@
         drawShape(sIdx, fIdx, 'ghost');
     }
 
-    function handleClick(sIdx, fIdx, fretEl) {
-        const note = fretEl.dataset.note;
-
+    function handleClick(sIdx, fIdx, fret) {
         if (currentMode === 'shape' && activeShape) {
-            document.querySelectorAll('.note:not(.ghost)').forEach(n => n.remove());
-            drawShape(sIdx, fIdx, 'shape-node');
+            clearBoard();
+            drawShape(sIdx, fIdx, 'highlight');
         } else if (currentMode === 'lesson') {
-            if (note === targetNote) {
-                fretEl.innerHTML = `<div class="note correct">${note}</div>`;
+            if (fret.dataset.note === targetNote) {
+                fret.innerHTML = `<div class="note correct">${targetNote}</div>`;
             } else {
                 const err = document.createElement('div');
                 err.className = 'note wrong';
-                err.innerText = note;
-                fretEl.appendChild(err);
+                err.innerText = fret.dataset.note;
+                fret.appendChild(err);
                 setTimeout(() => err.remove(), 600);
             }
         }
     }
 
-    function drawShape(anchorS, anchorF, className) {
+    function drawShape(anchorS, anchorF, cls) {
         activeShape.forEach(off => {
-            const ts = anchorS - off.s; // Offset 'up' the strings
-            const tf = anchorF + off.f;
+            const ts = anchorS - off.s, tf = anchorF + off.f;
             if (ts >= 0 && ts < 6 && tf >= 0 && tf <= 12) {
-                const targetFret = document.querySelector(`.string[data-s="${ts}"]`).children[tf];
-                const noteName = targetFret.dataset.note;
-                const node = document.createElement('div');
-                node.className = `note ${className}`;
-                node.innerHTML = `${noteName}<span>${off.i}</span>`;
-                targetFret.appendChild(node);
+                const f = document.querySelector(`.string[data-s="${ts}"]`).children[tf];
+                f.innerHTML += `<div class="note ${cls}">${f.dataset.note}<span>${off.i}</span></div>`;
             }
         });
     }
 
-    function clearGhost() {
-        document.querySelectorAll('.ghost').forEach(g => g.remove());
-    }
+    function updateTuning(v) { currentTuning = TUNINGS[v]; initBoard(); }
+    function updateCapo(v) { capoPos = parseInt(v); initBoard(); }
+    function clearBoard() { document.querySelectorAll('.note').forEach(n => n.remove()); }
+    function clearGhost() { document.querySelectorAll('.ghost').forEach(n => n.remove()); }
 
     initBoard();
-    setMode('lesson');
 </script>
 </body>
 </html>
